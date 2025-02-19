@@ -1,4 +1,4 @@
-package com.alonsocorporation.pointofsale.controller;
+package com.alonsocorporation.pointofsale.controllers;
 
 import com.alonsocorporation.pointofsale.entities.*;
 import com.alonsocorporation.pointofsale.services.*;
