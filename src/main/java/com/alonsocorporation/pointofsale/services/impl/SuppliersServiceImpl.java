@@ -52,6 +52,8 @@ public class SuppliersServiceImpl implements SuppliersService {
                     existingSupplier.setState(suppliers.getState());
                     existingSupplier.setZipCode(suppliers.getZipCode());
                     existingSupplier.setCountry(suppliers.getCountry());
+                    existingSupplier.setTaxId(suppliers.getTaxId());
+                    existingSupplier.setWebsite(suppliers.getWebsite());
 
                     return suppliersRepository.save(existingSupplier);
                 })
