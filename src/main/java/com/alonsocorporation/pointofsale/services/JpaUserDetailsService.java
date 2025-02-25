@@ -3,7 +3,6 @@ package com.alonsocorporation.pointofsale.services;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -18,17 +17,20 @@ import com.alonsocorporation.pointofsale.repositories.UserRepository;
 @Service
 public class JpaUserDetailsService implements UserDetailsService {
 
-    @Autowired
-    private UserRepository repository;
+    private final UserRepository repository;
+
+    public JpaUserDetailsService(UserRepository repository) {
+        this.repository = repository;
+    }
 
     @Transactional(readOnly = true)
     @Override
-    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+    public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
 
-        Optional<User> userOptional = repository.findByUsername(username);
+        Optional<User> userOptional = repository.findByEmail(email);
 
         if (userOptional.isEmpty()) {
-            throw new UsernameNotFoundException(String.format("Username %s no existe en el sistema!", username));
+            throw new UsernameNotFoundException(String.format("Email %s no existe en el sistema!", email));
         }
 
         User user = userOptional.orElseThrow();
@@ -37,7 +39,7 @@ public class JpaUserDetailsService implements UserDetailsService {
                 .map(role -> new SimpleGrantedAuthority(role.getName()))
                 .collect(Collectors.toList());
 
-        return new org.springframework.security.core.userdetails.User(user.getUsername(),
+        return new org.springframework.security.core.userdetails.User(user.getEmail(),
                 user.getPassword(),
                 user.isEnabled(),
                 true,

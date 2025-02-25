@@ -1,17 +1,8 @@
 package com.alonsocorporation.pointofsale.security.filter;
 
-import static com.alonsocorporation.pointofsale.security.TokenJwtConfig.CONTENT_TYPE;
-import static com.alonsocorporation.pointofsale.security.TokenJwtConfig.HEADER_AUTHORIZATION;
-import static com.alonsocorporation.pointofsale.security.TokenJwtConfig.PREFIX_TOKEN;
-import static com.alonsocorporation.pointofsale.security.TokenJwtConfig.SECRET_KEY;
-
-
+import static com.alonsocorporation.pointofsale.security.TokenJwtConfig.*;
+import java.util.Collections;
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
-
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -19,10 +10,8 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
-
-import com.alonsocorporation.pointofsale.security.SimpleGrantedAuthorityJsonCreator;
+import com.alonsocorporation.pointofsale.dto.ApiResponse;
 import com.fasterxml.jackson.databind.ObjectMapper;
-
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
@@ -52,23 +41,25 @@ public class JwtValidationFilter extends BasicAuthenticationFilter {
         try {
             Claims claims = Jwts.parser().verifyWith(SECRET_KEY).build().parseSignedClaims(token).getPayload();
             String usename = claims.getSubject();
-            // String usename2 = (String) claims.get("username");
-            Object authoritiesClaims = claims.get("authorities");
+            Long id = claims.get("id") != null ? ((Number) claims.get("id")).longValue() : null;
 
-            Collection<? extends GrantedAuthority> authorities = Arrays.asList(
-                    new ObjectMapper()
-                .addMixIn(SimpleGrantedAuthority.class, 
-                                    SimpleGrantedAuthorityJsonCreator.class)
-                .readValue(authoritiesClaims.toString().getBytes(), SimpleGrantedAuthority[].class)
-                );
+            String authoritiesClaims = (String) claims.get("authorities");
 
-            UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(usename, null, authorities);
+             GrantedAuthority authority = new SimpleGrantedAuthority(authoritiesClaims);
+
+            request.setAttribute("rol", authority.getAuthority());
+            request.setAttribute("email", usename);
+            request.setAttribute("id", id);
+
+            UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(usename, null, Collections.singletonList(authority));
             SecurityContextHolder .getContext().setAuthentication(authenticationToken);
             chain.doFilter(request, response);
         } catch (JwtException e) {
-            Map<String, String> body = new HashMap<>();
-            body.put("error", e.getMessage());
-            body.put("message", "El token JWT es invalido!");
+            ApiResponse<Object> body = new ApiResponse<>(
+                20,
+                "El token JWT es invalido.",
+                null
+            );
 
             response.getWriter().write(new ObjectMapper().writeValueAsString(body));
             response.setStatus(HttpStatus.UNAUTHORIZED.value());

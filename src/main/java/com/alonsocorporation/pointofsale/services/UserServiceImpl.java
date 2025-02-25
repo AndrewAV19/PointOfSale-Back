@@ -3,22 +3,24 @@ package com.alonsocorporation.pointofsale.services;
 import com.alonsocorporation.pointofsale.entities.*;
 import com.alonsocorporation.pointofsale.repositories.*;
 import java.util.*;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
-public class UserServiceImpl implements UserService{
+public class UserServiceImpl implements UserService {
 
-    @Autowired
-    private UserRepository repository;
+    private final UserRepository repository;
 
-    @Autowired
-    private RoleRepository roleRepository;
+    private final RoleRepository roleRepository;
 
-    @Autowired
-    private PasswordEncoder passwordEncoder;
+    private final PasswordEncoder passwordEncoder;
+
+    public UserServiceImpl(UserRepository repository, RoleRepository roleRepository, PasswordEncoder passwordEncoder) {
+        this.repository = repository;
+        this.roleRepository = roleRepository;
+        this.passwordEncoder = passwordEncoder;
+    }
 
     @Override
     @Transactional(readOnly = true)
@@ -46,8 +48,14 @@ public class UserServiceImpl implements UserService{
     }
 
     @Override
-    public boolean existsByUsername(String username) {
-        return repository.existsByUsername(username);
+    public boolean existsByEmail(String email) {
+        return repository.existsByEmail(email);
     }
-    
+
+    @Override
+    public User findByEmail(String email) {
+        Optional<User> userOptional = repository.findByEmail(email);
+        return userOptional.orElse(null);
+    }
+
 }

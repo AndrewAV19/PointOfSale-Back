@@ -2,9 +2,9 @@ package com.alonsocorporation.pointofsale.security;
 
 import com.alonsocorporation.pointofsale.security.filter.JwtAuthenticationFilter;
 import com.alonsocorporation.pointofsale.security.filter.JwtValidationFilter;
+import com.alonsocorporation.pointofsale.services.UserService;
 import java.util.Arrays;
 import java.util.Collections;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -15,8 +15,6 @@ import org.springframework.security.config.annotation.authentication.configurati
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
@@ -27,25 +25,28 @@ import org.springframework.web.filter.CorsFilter;
 @EnableMethodSecurity(prePostEnabled = true)
 public class SpringSecurityConfig {
 
-    @Autowired
-    private AuthenticationConfiguration authenticationConfiguration;
+    private final AuthenticationConfiguration authenticationConfiguration;
+
+    private final UserService userService;
 
     @Bean
     AuthenticationManager authenticationManager() throws Exception {
         return authenticationConfiguration.getAuthenticationManager();
     }
 
-    @Bean
-    PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
+    public SpringSecurityConfig(
+            AuthenticationConfiguration authenticationConfiguration,
+            UserService userService) {
+        this.authenticationConfiguration = authenticationConfiguration;
+        this.userService = userService;
     }
 
     @Bean
     SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        return http.authorizeHttpRequests((authz) -> authz
+        return http.authorizeHttpRequests(authz -> authz
                 .requestMatchers(HttpMethod.POST, "/licencias/activar").permitAll()
                 .anyRequest().authenticated())
-                .addFilter(new JwtAuthenticationFilter(authenticationManager()))
+                .addFilter(new JwtAuthenticationFilter(authenticationManager(), userService))
                 .addFilter(new JwtValidationFilter(authenticationManager()))
                 .csrf(config -> config.disable())
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))

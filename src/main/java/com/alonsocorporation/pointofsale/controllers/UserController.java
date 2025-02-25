@@ -3,7 +3,6 @@ package com.alonsocorporation.pointofsale.controllers;
 import com.alonsocorporation.pointofsale.entities.*;
 import com.alonsocorporation.pointofsale.services.*;
 import java.util.*;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
@@ -11,13 +10,15 @@ import org.springframework.web.bind.annotation.*;
 import jakarta.validation.Valid;
 import org.springframework.security.access.prepost.PreAuthorize;
 
-@CrossOrigin(origins="http://localhost:4200", originPatterns = "*")
 @RestController
 @RequestMapping("/users")
 public class UserController {
 
-    @Autowired
-    private UserService service;
+    private final UserService service;
+
+    public UserController(UserService service) {
+        this.service = service;
+    }
 
     @GetMapping
     public List<User> list() {
@@ -43,9 +44,9 @@ public class UserController {
     private ResponseEntity<?> validation(BindingResult result) {
         Map<String, String> errors = new HashMap<>();
 
-        result.getFieldErrors().forEach(err -> {
-            errors.put(err.getField(), "El campo " + err.getField() + " " + err.getDefaultMessage());
-        });
+        result.getFieldErrors().forEach(
+                err -> errors.put(err.getField(), "El campo " + err.getField() + " " + err.getDefaultMessage()));
+
         return ResponseEntity.badRequest().body(errors);
     }
 }

@@ -1,12 +1,14 @@
 package com.alonsocorporation.pointofsale.entities;
 
 import java.util.*;
-import com.alonsocorporation.pointofsale.validation.ExistsByUsername;
+import com.alonsocorporation.pointofsale.validation.ExistsByEmail;
 import com.fasterxml.jackson.annotation.*;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
+import lombok.Data;
 
 @Entity
+@Data
 @Table(name = "users")
 public class User {
 
@@ -14,15 +16,27 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ExistsByUsername
+    private String name;
+
+    @ExistsByEmail
     @NotBlank
-    @Size(min = 4, max = 12)
-    @Column(unique = true)
-    private String username;
+    private String email;
 
     @NotBlank
     @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private String password;
+
+    private String phone;
+
+    private String address;
+
+    private String city;
+
+    private String state;
+
+    private Integer zipCode;
+
+    private String country;
 
     @JsonIgnoreProperties({"users", "handler", "hibernateLazyInitializer"})
     @ManyToMany
@@ -50,60 +64,13 @@ public class User {
         enabled = true;
     }
 
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public String getUsername() {
-        return username;
-    }
-
-    public void setUsername(String username) {
-        this.username = username;
-    }
-
-    public String getPassword() {
-        return password;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
-    }
-
-    public List<Role> getRoles() {
-        return roles;
-    }
-
-    public void setRoles(List<Role> roles) {
-        this.roles = roles;
-    }
-
-    public boolean isAdmin() {
-        return admin;
-    }
-
-    public void setAdmin(boolean admin) {
-        this.admin = admin;
-    }
-
-    public boolean isEnabled() {
-        return enabled;
-    }
-
-    public void setEnabled(boolean enabled) {
-        this.enabled = enabled;
-    }
-
+    
     @Override
     public int hashCode() {
         final int prime = 31;
         int result = 1;
         result = prime * result + ((id == null) ? 0 : id.hashCode());
-        result = prime * result + ((username == null) ? 0 : username.hashCode());
+        result = prime * result + ((email == null) ? 0 : email.hashCode());
         return result;
     }
 
@@ -121,10 +88,10 @@ public class User {
                 return false;
         } else if (!id.equals(other.id))
             return false;
-        if (username == null) {
-            if (other.username != null)
+        if (email == null) {
+            if (other.email != null)
                 return false;
-        } else if (!username.equals(other.username))
+        } else if (!email.equals(other.email))
             return false;
         return true;
     }
