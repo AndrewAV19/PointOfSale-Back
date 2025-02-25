@@ -31,21 +31,16 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public User save(User user) {
-
-        Optional<Role> optionalRoleUser = roleRepository.findByName("ROLE_USER");
-        List<Role> roles = new ArrayList<>();
-
-        optionalRoleUser.ifPresent(roles::add);
-
-        if (user.isAdmin()) {
-            Optional<Role> optionalRoleAdmin = roleRepository.findByName("ROLE_ADMIN");
-            optionalRoleAdmin.ifPresent(roles::add);
+        if (user.getRoleIds() != null && !user.getRoleIds().isEmpty()) {
+            List<Role> roles = (List<Role>) roleRepository.findAllById(user.getRoleIds());
+            user.setRoles(roles);
         }
-
-        user.setRoles(roles);
+    
         user.setPassword(passwordEncoder.encode(user.getPassword()));
+    
         return repository.save(user);
     }
+    
 
     @Override
     public boolean existsByEmail(String email) {

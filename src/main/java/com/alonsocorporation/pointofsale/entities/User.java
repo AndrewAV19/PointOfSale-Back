@@ -38,17 +38,12 @@ public class User {
 
     private String country;
 
-    @JsonIgnoreProperties({"users", "handler", "hibernateLazyInitializer"})
+    @JsonIgnoreProperties({ "users", "handler", "hibernateLazyInitializer" })
     @ManyToMany
-    @JoinTable(
-        name = "users_roles",
-        joinColumns = @JoinColumn(name="user_id"),
-        inverseJoinColumns = @JoinColumn(name="role_id"),
-        uniqueConstraints = { @UniqueConstraint(columnNames = {"user_id", "role_id"})}
-    )
+    @JoinTable(name = "users_roles", joinColumns = @JoinColumn(name = "user_id"), inverseJoinColumns = @JoinColumn(name = "role_id"), uniqueConstraints = {
+            @UniqueConstraint(columnNames = { "user_id", "role_id" }) })
     private List<Role> roles;
 
-    
     public User() {
         roles = new ArrayList<>();
     }
@@ -57,14 +52,13 @@ public class User {
 
     @Transient
     @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
-    private boolean admin;
+    private List<Long> roleIds;
 
     @PrePersist
     public void prePersist() {
         enabled = true;
     }
 
-    
     @Override
     public int hashCode() {
         final int prime = 31;
@@ -96,5 +90,4 @@ public class User {
         return true;
     }
 
-    
 }
