@@ -39,6 +39,12 @@ public class UserController {
         if (result.hasFieldErrors()) {
             return validation(result);
         }
+        if (user.getEmail() == null || user.getEmail().isEmpty()) {
+            return ResponseEntity.badRequest().body("Email is required");
+        }
+        if (user.getPassword() == null || user.getPassword().isEmpty()) {
+            return ResponseEntity.badRequest().body("Password is required");
+        }
 
         return ResponseEntity.status(HttpStatus.CREATED).body(service.save(user));
     }

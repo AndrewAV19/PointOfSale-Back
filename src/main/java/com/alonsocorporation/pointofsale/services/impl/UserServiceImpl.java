@@ -37,9 +37,9 @@ public class UserServiceImpl implements UserService {
             List<Role> roles = (List<Role>) roleRepository.findAllById(user.getRoleIds());
             user.setRoles(roles);
         }
-    
+
         user.setPassword(passwordEncoder.encode(user.getPassword()));
-    
+
         return repository.save(user);
     }
 
@@ -55,13 +55,42 @@ public class UserServiceImpl implements UserService {
         Optional<User> userOptional = repository.findById(id);
         if (userOptional.isPresent()) {
             User user = userOptional.get();
-            user.setName(userDetails.getName());
-            user.setEmail(userDetails.getEmail());
-            user.setPassword(passwordEncoder.encode(userDetails.getPassword()));
+    
+            // Actualizar solo los campos que no son null
+            if (userDetails.getName() != null) {
+                user.setName(userDetails.getName());
+            }
+            if (userDetails.getEmail() != null) {
+                user.setEmail(userDetails.getEmail());
+            }
+            if (userDetails.getPassword() != null && !userDetails.getPassword().isEmpty()) {
+                user.setPassword(passwordEncoder.encode(userDetails.getPassword()));
+            }
+            if (userDetails.getPhone() != null) {
+                user.setPhone(userDetails.getPhone());
+            }
+            if (userDetails.getAddress() != null) {
+                user.setAddress(userDetails.getAddress());
+            }
+            if (userDetails.getCity() != null) {
+                user.setCity(userDetails.getCity());
+            }
+            if (userDetails.getState() != null) {
+                user.setState(userDetails.getState());
+            }
+            if (userDetails.getZipCode() != null) {
+                user.setZipCode(userDetails.getZipCode());
+            }
+            if (userDetails.getCountry() != null) {
+                user.setCountry(userDetails.getCountry());
+            }
+    
+            // Actualizar roles si se proporcionan nuevos
             if (userDetails.getRoleIds() != null && !userDetails.getRoleIds().isEmpty()) {
                 List<Role> roles = (List<Role>) roleRepository.findAllById(userDetails.getRoleIds());
                 user.setRoles(roles);
             }
+    
             return repository.save(user);
         } else {
             throw new RuntimeException("User not found with id " + id);

@@ -19,11 +19,8 @@ public class User {
     private String name;
 
     @ExistsByEmail
-    @NotBlank
     private String email;
 
-    @NotBlank
-    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private String password;
 
     private String phone;
