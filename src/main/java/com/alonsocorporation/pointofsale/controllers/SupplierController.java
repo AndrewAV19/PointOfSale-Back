@@ -1,9 +1,11 @@
 package com.alonsocorporation.pointofsale.controllers;
 
+import com.alonsocorporation.pointofsale.entities.Products;
 import com.alonsocorporation.pointofsale.entities.Suppliers;
 import com.alonsocorporation.pointofsale.services.SuppliersService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -37,9 +39,14 @@ public class SupplierController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Suppliers> updateSupplier(@PathVariable Long id, @RequestBody Suppliers suppliers) {
-        Suppliers updatedSupplier = suppliersService.update(id, suppliers);
-        return ResponseEntity.ok(updatedSupplier);
+    public ResponseEntity<?> updateSupplier(@PathVariable Long id, @RequestBody Suppliers supplier,
+            BindingResult result) {
+        try {
+            Suppliers updatedSupplier = suppliersService.update(id, supplier);
+            return ResponseEntity.ok(updatedSupplier);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        }
     }
 
     @DeleteMapping("/{id}")

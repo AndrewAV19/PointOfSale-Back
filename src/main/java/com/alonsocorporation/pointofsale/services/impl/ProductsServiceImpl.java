@@ -5,9 +5,11 @@ import com.alonsocorporation.pointofsale.exceptions.ProductAlreadyExistsExceptio
 import com.alonsocorporation.pointofsale.exceptions.ProductNotFoundException;
 import com.alonsocorporation.pointofsale.repositories.ProductsRepository;
 import com.alonsocorporation.pointofsale.services.ProductsService;
+
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class ProductsServiceImpl implements ProductsService {
@@ -40,23 +42,47 @@ public class ProductsServiceImpl implements ProductsService {
     }
 
     @Override
-    public Products update(Long id, Products products) {
-        return productsRepository.findById(id)
-                .map(existingProduct -> {
-                    existingProduct.setName(products.getName());
-                    existingProduct.setDescription(products.getDescription());
-                    existingProduct.setPrice(products.getPrice());
-                    existingProduct.setStock(products.getStock());
-                    existingProduct.setCategory(products.getCategory());
-                    existingProduct.setSupplier(products.getSupplier());
-                    existingProduct.setCostPrice(products.getCostPrice());
-                    existingProduct.setDiscount(products.getDiscount());
-                    existingProduct.setTaxRate(products.getTaxRate());
-                    existingProduct.setImages(products.getImages());
+    public Products update(Long id, Products productDetails) {
+        Optional<Products> productOptional = productsRepository.findById(id);
+        if (productOptional.isPresent()) {
+            Products product = productOptional.get();
 
-                    return productsRepository.save(existingProduct);
-                })
-                .orElseThrow(() -> new ProductNotFoundException(id));
+            // Actualizar solo los campos que no son null
+            if (productDetails.getName() != null) {
+                product.setName(productDetails.getName());
+            }
+            if (productDetails.getDescription() != null) {
+                product.setDescription(productDetails.getDescription());
+            }
+            if (productDetails.getPrice() != null && productDetails.getPrice() >= 0) {
+                product.setPrice(productDetails.getPrice());
+            }
+            if (productDetails.getStock() != null && productDetails.getStock() >= 0) {
+                product.setStock(productDetails.getStock());
+            }
+            if (productDetails.getCategory() != null) {
+                product.setCategory(productDetails.getCategory());
+            }
+            if (productDetails.getSupplier() != null) {
+                product.setSupplier(productDetails.getSupplier());
+            }
+            if (productDetails.getCostPrice() != null && productDetails.getCostPrice() >= 0) {
+                product.setCostPrice(productDetails.getCostPrice());
+            }
+            if (productDetails.getDiscount() != null && productDetails.getDiscount() >= 0) {
+                product.setDiscount(productDetails.getDiscount());
+            }
+            if (productDetails.getTaxRate() != null && productDetails.getTaxRate() >= 0) {
+                product.setTaxRate(productDetails.getTaxRate());
+            }
+            if (productDetails.getImages() != null && !productDetails.getImages().isEmpty()) {
+                product.setImages(productDetails.getImages());
+            }
+
+            return productsRepository.save(product);
+        } else {
+            throw new RuntimeException("Product not found with id " + id);
+        }
     }
 
     @Override

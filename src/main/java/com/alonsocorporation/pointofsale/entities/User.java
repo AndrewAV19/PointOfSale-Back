@@ -4,7 +4,6 @@ import java.util.*;
 import com.alonsocorporation.pointofsale.validation.ExistsByEmail;
 import com.fasterxml.jackson.annotation.*;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.*;
 import lombok.Data;
 
 @Entity

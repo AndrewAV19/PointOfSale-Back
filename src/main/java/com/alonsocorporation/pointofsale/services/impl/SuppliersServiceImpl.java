@@ -9,6 +9,7 @@ import com.alonsocorporation.pointofsale.services.SuppliersService;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class SuppliersServiceImpl implements SuppliersService {
@@ -41,23 +42,50 @@ public class SuppliersServiceImpl implements SuppliersService {
     }
 
     @Override
-    public Suppliers update(Long id, Suppliers suppliers) {
-        return suppliersRepository.findById(id)
-                .map(existingSupplier -> {
-                    existingSupplier.setName(suppliers.getName());
-                    existingSupplier.setEmail(suppliers.getEmail());
-                    existingSupplier.setPhone(suppliers.getPhone());
-                    existingSupplier.setAddress(suppliers.getAddress());
-                    existingSupplier.setCity(suppliers.getCity());
-                    existingSupplier.setState(suppliers.getState());
-                    existingSupplier.setZipCode(suppliers.getZipCode());
-                    existingSupplier.setCountry(suppliers.getCountry());
-                    existingSupplier.setTaxId(suppliers.getTaxId());
-                    existingSupplier.setWebsite(suppliers.getWebsite());
+    public Suppliers update(Long id, Suppliers supplierDetails) {
+        Optional<Suppliers> supplierOptional = suppliersRepository.findById(id);
+        if (supplierOptional.isPresent()) {
+            Suppliers supplier = supplierOptional.get();
 
-                    return suppliersRepository.save(existingSupplier);
-                })
-                .orElseThrow(() -> new SupplierNotFoundException(id));
+            // Actualizar solo los campos que no son null
+            if (supplierDetails.getName() != null) {
+                supplier.setName(supplierDetails.getName());
+            }
+            if (supplierDetails.getContactName() != null) {
+                supplier.setContactName(supplierDetails.getContactName());
+            }
+            if (supplierDetails.getEmail() != null) {
+                supplier.setEmail(supplierDetails.getEmail());
+            }
+            if (supplierDetails.getPhone() != null) {
+                supplier.setPhone(supplierDetails.getPhone());
+            }
+            if (supplierDetails.getAddress() != null) {
+                supplier.setAddress(supplierDetails.getAddress());
+            }
+            if (supplierDetails.getCity() != null) {
+                supplier.setCity(supplierDetails.getCity());
+            }
+            if (supplierDetails.getState() != null) {
+                supplier.setState(supplierDetails.getState());
+            }
+            if (supplierDetails.getZipCode() != null) {
+                supplier.setZipCode(supplierDetails.getZipCode());
+            }
+            if (supplierDetails.getCountry() != null) {
+                supplier.setCountry(supplierDetails.getCountry());
+            }
+            if (supplierDetails.getTaxId() != null) {
+                supplier.setTaxId(supplierDetails.getTaxId());
+            }
+            if (supplierDetails.getWebsite() != null) {
+                supplier.setWebsite(supplierDetails.getWebsite());
+            }
+
+            return suppliersRepository.save(supplier);
+        } else {
+            throw new RuntimeException("Supplier not found with id " + id);
+        }
     }
 
     @Override

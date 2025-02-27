@@ -5,9 +5,11 @@ import com.alonsocorporation.pointofsale.exceptions.ClientAlreadyExistsException
 import com.alonsocorporation.pointofsale.exceptions.ClientNotFoundException;
 import com.alonsocorporation.pointofsale.repositories.ClientsRepository;
 import com.alonsocorporation.pointofsale.services.ClientsService;
+
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class ClientsServiceImpl implements ClientsService {
@@ -40,21 +42,41 @@ public class ClientsServiceImpl implements ClientsService {
     }
 
     @Override
-    public Clients update(Long id, Clients client) {
-        return clientsRepository.findById(id)
-                .map(existingClient -> {
-                    existingClient.setName(client.getName());
-                    existingClient.setEmail(client.getEmail());
-                    existingClient.setPhone(client.getPhone());
-                    existingClient.setAddress(client.getAddress());
-                    existingClient.setCity(client.getCity());
-                    existingClient.setState(client.getState());
-                    existingClient.setZipCode(client.getZipCode());
-                    existingClient.setCountry(client.getCountry());
+    public Clients update(Long id, Clients clientDetails) {
+        Optional<Clients> clientOptional = clientsRepository.findById(id);
+        if (clientOptional.isPresent()) {
+            Clients client = clientOptional.get();
 
-                    return clientsRepository.save(existingClient);
-                })
-                .orElseThrow(() -> new ClientNotFoundException(id));
+            // Actualizar solo los campos que no son null
+            if (clientDetails.getName() != null) {
+                client.setName(clientDetails.getName());
+            }
+            if (clientDetails.getEmail() != null) {
+                client.setEmail(clientDetails.getEmail());
+            }
+            if (clientDetails.getPhone() != null) {
+                client.setPhone(clientDetails.getPhone());
+            }
+            if (clientDetails.getAddress() != null) {
+                client.setAddress(clientDetails.getAddress());
+            }
+            if (clientDetails.getCity() != null) {
+                client.setCity(clientDetails.getCity());
+            }
+            if (clientDetails.getState() != null) {
+                client.setState(clientDetails.getState());
+            }
+            if (clientDetails.getZipCode() != null) {
+                client.setZipCode(clientDetails.getZipCode());
+            }
+            if (clientDetails.getCountry() != null) {
+                client.setCountry(clientDetails.getCountry());
+            }
+
+            return clientsRepository.save(client);
+        } else {
+            throw new RuntimeException("Client not found with id " + id);
+        }
     }
 
     @Override

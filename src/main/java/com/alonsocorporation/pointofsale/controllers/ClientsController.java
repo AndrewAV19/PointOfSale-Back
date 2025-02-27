@@ -2,8 +2,12 @@ package com.alonsocorporation.pointofsale.controllers;
 
 import com.alonsocorporation.pointofsale.entities.Clients;
 import com.alonsocorporation.pointofsale.services.ClientsService;
+
+import jakarta.validation.Valid;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -37,9 +41,13 @@ public class ClientsController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Clients> updateClient(@PathVariable Long id, @RequestBody Clients client) {
-        Clients updatedClient = clientsService.update(id, client);
-        return ResponseEntity.ok(updatedClient);
+    public ResponseEntity<?> updateClient(@PathVariable Long id, @RequestBody Clients client, BindingResult result) {
+        try {
+            Clients updatedClient = clientsService.update(id, client);
+            return ResponseEntity.ok(updatedClient);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        }
     }
 
     @DeleteMapping("/{id}")
