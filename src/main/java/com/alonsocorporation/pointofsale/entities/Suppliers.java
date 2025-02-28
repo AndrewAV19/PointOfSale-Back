@@ -2,7 +2,9 @@ package com.alonsocorporation.pointofsale.entities;
 
 import jakarta.persistence.*;
 import lombok.Data;
+
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
 @Data
@@ -25,6 +27,9 @@ public class Suppliers {
     private String country;
     private String taxId;
     private String website;
+
+    @ManyToMany(mappedBy = "suppliers", fetch = FetchType.EAGER)
+    private List<Products> products;
 
     @Column(updatable = false)
     private LocalDateTime createdAt;

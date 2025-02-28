@@ -19,18 +19,32 @@ public class Products {
     @NotBlank
     private String name;
     private String description;
+
     @Min(0)
     private Double price;
+
     @Min(0)
     private Integer stock;
-    private String category;
-    private Long supplier;
+
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "category_id", nullable = false)
+    private Categories category;
+
+    @ManyToMany(fetch = FetchType.EAGER)
+    @JoinTable(name = "product_suppliers", 
+               joinColumns = @JoinColumn(name = "product_id"), 
+               inverseJoinColumns = @JoinColumn(name = "supplier_id"))
+    private List<Suppliers> suppliers;
+
     @Min(0)
     private Double costPrice;
+
     @Min(0)
     private Double discount;
+
     @Min(0)
     private Double taxRate;
+
     @ElementCollection
     private List<String> images;
 

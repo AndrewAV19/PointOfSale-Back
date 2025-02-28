@@ -1,53 +1,88 @@
 package com.alonsocorporation.pointofsale.services.impl;
 
+import com.alonsocorporation.pointofsale.entities.Categories;
 import com.alonsocorporation.pointofsale.entities.Products;
+import com.alonsocorporation.pointofsale.entities.Suppliers;
 import com.alonsocorporation.pointofsale.exceptions.ProductAlreadyExistsException;
 import com.alonsocorporation.pointofsale.exceptions.ProductNotFoundException;
 import com.alonsocorporation.pointofsale.repositories.ProductsRepository;
+import com.alonsocorporation.pointofsale.repositories.SuppliersRepository;
 import com.alonsocorporation.pointofsale.services.ProductsService;
 
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
+
+import org.springframework.transaction.annotation.Transactional;
+
+import com.alonsocorporation.pointofsale.dto.response.ProductDTO;
+import com.alonsocorporation.pointofsale.repositories.CategoriesRepository;
 
 @Service
+@Transactional
 public class ProductsServiceImpl implements ProductsService {
 
     private final ProductsRepository productsRepository;
+    private final SuppliersRepository suppliersRepository;
+    private final CategoriesRepository categoriesRepository;
 
-    public ProductsServiceImpl(ProductsRepository productsRepository) {
+    public ProductsServiceImpl(ProductsRepository productsRepository, SuppliersRepository suppliersRepository,
+            CategoriesRepository categoriesRepository) {
         this.productsRepository = productsRepository;
+        this.suppliersRepository = suppliersRepository;
+        this.categoriesRepository = categoriesRepository;
     }
 
     @Override
-    public List<Products> getAll() {
-        return productsRepository.findAll();
+    public List<ProductDTO> getAll() {
+        return productsRepository.findAll()
+                .stream()
+                .map(ProductDTO::new)
+                .collect(Collectors.toList());
     }
 
     @Override
-    public Products getById(Long id) {
-        return productsRepository.findById(id)
+    public ProductDTO getById(Long id) {
+        Products product = productsRepository.findById(id)
                 .orElseThrow(() -> new ProductNotFoundException(id));
+        return new ProductDTO(product);
     }
 
     @Override
-    public Products create(Products products) {
-        // Verificar si ya existe un producto con el mismo name
-        productsRepository.findByName(products.getName()).ifPresent(existingClient -> {
-            throw new ProductAlreadyExistsException(products.getName());
+    public ProductDTO create(Products product) {
+        productsRepository.findByName(product.getName()).ifPresent(existingProduct -> {
+            throw new ProductAlreadyExistsException(product.getName());
         });
 
-        return productsRepository.save(products);
+        if (product.getSuppliers() == null) {
+            product.setSuppliers(new ArrayList<>());
+        }
+
+        for (Suppliers supplier : product.getSuppliers()) {
+            Suppliers existingSupplier = suppliersRepository.findById(supplier.getId())
+                    .orElseThrow(() -> new RuntimeException("Supplier not found with id " + supplier.getId()));
+
+            existingSupplier.getProducts().add(product);
+        }
+
+        Categories category = categoriesRepository.findById(product.getCategory().getId())
+                .orElseThrow(() -> new RuntimeException("Category not found with id " + product.getCategory().getId()));
+        product.setCategory(category);
+
+        Products savedProduct = productsRepository.save(product);
+
+        return new ProductDTO(savedProduct);
     }
 
     @Override
-    public Products update(Long id, Products productDetails) {
+    public ProductDTO update(Long id, Products productDetails) {
         Optional<Products> productOptional = productsRepository.findById(id);
         if (productOptional.isPresent()) {
             Products product = productOptional.get();
 
-            // Actualizar solo los campos que no son null
             if (productDetails.getName() != null) {
                 product.setName(productDetails.getName());
             }
@@ -63,8 +98,8 @@ public class ProductsServiceImpl implements ProductsService {
             if (productDetails.getCategory() != null) {
                 product.setCategory(productDetails.getCategory());
             }
-            if (productDetails.getSupplier() != null) {
-                product.setSupplier(productDetails.getSupplier());
+            if (productDetails.getSuppliers() != null) {
+                product.setSuppliers(productDetails.getSuppliers());
             }
             if (productDetails.getCostPrice() != null && productDetails.getCostPrice() >= 0) {
                 product.setCostPrice(productDetails.getCostPrice());
@@ -79,7 +114,7 @@ public class ProductsServiceImpl implements ProductsService {
                 product.setImages(productDetails.getImages());
             }
 
-            return productsRepository.save(product);
+            return new ProductDTO(productsRepository.save(product));
         } else {
             throw new RuntimeException("Product not found with id " + id);
         }
