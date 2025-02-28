@@ -1,6 +1,5 @@
 package com.alonsocorporation.pointofsale.controllers;
 
-import com.alonsocorporation.pointofsale.entities.Products;
 import com.alonsocorporation.pointofsale.entities.Suppliers;
 import com.alonsocorporation.pointofsale.services.SuppliersService;
 import org.springframework.http.HttpStatus;
