@@ -52,30 +52,38 @@ public class ProductsServiceImpl implements ProductsService {
     }
 
     @Override
-    public ProductDTO create(Products product) {
-        productsRepository.findByName(product.getName()).ifPresent(existingProduct -> {
-            throw new ProductAlreadyExistsException(product.getName());
-        });
+public ProductDTO create(Products product) {
+    productsRepository.findByName(product.getName()).ifPresent(existingProduct -> {
+        throw new ProductAlreadyExistsException(product.getName());
+    });
 
-        if (product.getSuppliers() == null) {
-            product.setSuppliers(new ArrayList<>());
-        }
+    // Si no se proporcionan proveedores, inicializa una lista vacía
+    if (product.getSuppliers() == null) {
+        product.setSuppliers(new ArrayList<>());
+    }
 
-        for (Suppliers supplier : product.getSuppliers()) {
-            Suppliers existingSupplier = suppliersRepository.findById(supplier.getId())
-                    .orElseThrow(() -> new RuntimeException("Supplier not found with id " + supplier.getId()));
+    // Si se proporcionan proveedores, verifica que existan en la base de datos
+    for (Suppliers supplier : product.getSuppliers()) {
+        Suppliers existingSupplier = suppliersRepository.findById(supplier.getId())
+                .orElseThrow(() -> new RuntimeException("Supplier not found with id " + supplier.getId()));
 
-            existingSupplier.getProducts().add(product);
-        }
+        existingSupplier.getProducts().add(product);
+    }
 
+    // Si se proporciona una categoría y su ID no es 0, verifica que exista en la base de datos
+    if (product.getCategory() != null && product.getCategory().getId() != 0) {
         Categories category = categoriesRepository.findById(product.getCategory().getId())
                 .orElseThrow(() -> new RuntimeException("Category not found with id " + product.getCategory().getId()));
         product.setCategory(category);
-
-        Products savedProduct = productsRepository.save(product);
-
-        return new ProductDTO(savedProduct);
+    } else {
+        // Si no se proporciona una categoría o el ID es 0, no la asignes
+        product.setCategory(null);
     }
+
+    Products savedProduct = productsRepository.save(product);
+
+    return new ProductDTO(savedProduct);
+}
 
     @Override
     public ProductDTO update(Long id, Products productDetails) {

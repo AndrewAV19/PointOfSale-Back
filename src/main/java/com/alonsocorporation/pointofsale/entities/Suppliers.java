@@ -6,6 +6,8 @@ import lombok.Data;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 @Entity
 @Data
 @Table(name = "suppliers")
@@ -28,6 +30,9 @@ public class Suppliers {
     private String taxId;
     private String website;
 
+
+
+    @JsonIgnore 
     @ManyToMany(mappedBy = "suppliers", fetch = FetchType.EAGER)
     private List<Products> products;
 
