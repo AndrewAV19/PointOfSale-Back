@@ -6,6 +6,8 @@ import lombok.Data;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 @Entity
 @Data
 @Table(name = "products")
@@ -30,10 +32,8 @@ public class Products {
     @JoinColumn(name = "category_id", nullable = false)
     private Categories category;
 
-    @ManyToMany(fetch = FetchType.EAGER)
-    @JoinTable(name = "product_suppliers", 
-               joinColumns = @JoinColumn(name = "product_id"), 
-               inverseJoinColumns = @JoinColumn(name = "supplier_id"))
+    @ManyToMany(fetch = FetchType.EAGER, cascade = CascadeType.REMOVE)
+    @JoinTable(name = "product_suppliers", joinColumns = @JoinColumn(name = "product_id"), inverseJoinColumns = @JoinColumn(name = "supplier_id"))
     private List<Suppliers> suppliers;
 
     @Min(0)

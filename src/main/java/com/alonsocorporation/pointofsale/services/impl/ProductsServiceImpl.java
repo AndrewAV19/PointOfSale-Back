@@ -52,38 +52,40 @@ public class ProductsServiceImpl implements ProductsService {
     }
 
     @Override
-public ProductDTO create(Products product) {
-    productsRepository.findByName(product.getName()).ifPresent(existingProduct -> {
-        throw new ProductAlreadyExistsException(product.getName());
-    });
+    public ProductDTO create(Products product) {
+        productsRepository.findByName(product.getName()).ifPresent(existingProduct -> {
+            throw new ProductAlreadyExistsException(product.getName());
+        });
 
-    // Si no se proporcionan proveedores, inicializa una lista vacía
-    if (product.getSuppliers() == null) {
-        product.setSuppliers(new ArrayList<>());
+        // Si no se proporcionan proveedores, inicializa una lista vacía
+        if (product.getSuppliers() == null) {
+            product.setSuppliers(new ArrayList<>());
+        }
+
+        // Si se proporcionan proveedores, verifica que existan en la base de datos
+        for (Suppliers supplier : product.getSuppliers()) {
+            Suppliers existingSupplier = suppliersRepository.findById(supplier.getId())
+                    .orElseThrow(() -> new RuntimeException("Supplier not found with id " + supplier.getId()));
+
+            existingSupplier.getProducts().add(product);
+        }
+
+        // Si se proporciona una categoría y su ID no es 0, verifica que exista en la
+        // base de datos
+        if (product.getCategory() != null && product.getCategory().getId() != 0) {
+            Categories category = categoriesRepository.findById(product.getCategory().getId())
+                    .orElseThrow(
+                            () -> new RuntimeException("Category not found with id " + product.getCategory().getId()));
+            product.setCategory(category);
+        } else {
+            // Si no se proporciona una categoría o el ID es 0, no la asignes
+            product.setCategory(null);
+        }
+
+        Products savedProduct = productsRepository.save(product);
+
+        return new ProductDTO(savedProduct);
     }
-
-    // Si se proporcionan proveedores, verifica que existan en la base de datos
-    for (Suppliers supplier : product.getSuppliers()) {
-        Suppliers existingSupplier = suppliersRepository.findById(supplier.getId())
-                .orElseThrow(() -> new RuntimeException("Supplier not found with id " + supplier.getId()));
-
-        existingSupplier.getProducts().add(product);
-    }
-
-    // Si se proporciona una categoría y su ID no es 0, verifica que exista en la base de datos
-    if (product.getCategory() != null && product.getCategory().getId() != 0) {
-        Categories category = categoriesRepository.findById(product.getCategory().getId())
-                .orElseThrow(() -> new RuntimeException("Category not found with id " + product.getCategory().getId()));
-        product.setCategory(category);
-    } else {
-        // Si no se proporciona una categoría o el ID es 0, no la asignes
-        product.setCategory(null);
-    }
-
-    Products savedProduct = productsRepository.save(product);
-
-    return new ProductDTO(savedProduct);
-}
 
     @Override
     public ProductDTO update(Long id, Products productDetails) {
@@ -130,9 +132,20 @@ public ProductDTO create(Products product) {
 
     @Override
     public void delete(Long id) {
-        if (!productsRepository.existsById(id)) {
+        Optional<Products> productOptional = productsRepository.findById(id);
+        if (productOptional.isPresent()) {
+            Products product = productOptional.get();
+
+            for (Suppliers supplier : product.getSuppliers()) {
+                supplier.getProducts().remove(product);
+            }
+            product.getSuppliers().clear();
+
+            suppliersRepository.saveAll(product.getSuppliers());
+
+            productsRepository.delete(product);
+        } else {
             throw new ProductNotFoundException(id);
         }
-        productsRepository.deleteById(id);
     }
 }

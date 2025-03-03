@@ -1,0 +1,28 @@
+package com.alonsocorporation.pointofsale.dto.response;
+
+import lombok.Data;
+import java.util.List;
+import com.alonsocorporation.pointofsale.entities.Sales;
+import com.fasterxml.jackson.annotation.JsonInclude;
+
+@Data
+@JsonInclude(JsonInclude.Include.NON_NULL)
+public class SalesDTO {
+    private Long id;
+    private ClientDTO client;
+    private List<SaleProductDTO> saleProducts;
+    private Double amount;
+    private String state;
+    private Double total;
+
+    public SalesDTO(Sales sale) {
+        this.id = sale.getId();
+        this.client = sale.getClient() != null ? new ClientDTO(sale.getClient()) : null;
+        this.saleProducts = sale.getSaleProducts() != null
+                ? sale.getSaleProducts().stream().map(SaleProductDTO::new).toList()
+                : List.of();
+        this.amount = sale.getAmount();
+        this.state = sale.getState();
+        this.total = sale.getTotal();
+    }
+}
