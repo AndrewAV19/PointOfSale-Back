@@ -1,6 +1,7 @@
 package com.alonsocorporation.pointofsale.dto.response;
 
 import lombok.Data;
+import java.time.LocalDateTime;
 import java.util.List;
 import com.alonsocorporation.pointofsale.entities.Sales;
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -14,6 +15,7 @@ public class SalesDTO {
     private Double amount;
     private String state;
     private Double total;
+    private final LocalDateTime createdAt;
 
     public SalesDTO(Sales sale) {
         this.id = sale.getId();
@@ -24,5 +26,6 @@ public class SalesDTO {
         this.amount = sale.getAmount();
         this.state = sale.getState();
         this.total = sale.getTotal();
+        this.createdAt = sale.getCreatedAt();
     }
 }
