@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/shopping")
+@RequestMapping("/shoppings")
 public class ShoppingController {
 
     private final ShoppingService shoppingService;
