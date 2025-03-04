@@ -1,5 +1,8 @@
 package com.alonsocorporation.pointofsale.services.impl;
 
+import com.alonsocorporation.pointofsale.dto.response.ClientDTO;
+import com.alonsocorporation.pointofsale.dto.response.ClientDebtDTO;
+import com.alonsocorporation.pointofsale.dto.response.ProductsDTO;
 import com.alonsocorporation.pointofsale.dto.response.SalesDTO;
 import com.alonsocorporation.pointofsale.entities.*;
 import com.alonsocorporation.pointofsale.exceptions.ProductNotFoundException;
@@ -8,7 +11,9 @@ import com.alonsocorporation.pointofsale.services.SalesService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -162,5 +167,57 @@ public class SalesServiceImpl implements SalesService {
                 .stream()
                 .map(SalesDTO::new)
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<ClientDebtDTO> getClientDebts(Long clientId) {
+        // Obtener todas las ventas pendientes del cliente específico
+        List<Sales> pendingSales = salesRepository.findByClientIdAndState(clientId, "pendiente");
+
+        // Si no hay ventas pendientes, retornar una lista vacía
+        if (pendingSales.isEmpty()) {
+            return new ArrayList<>();
+        }
+
+        // Consolidar productos y montos
+        Map<Long, ProductsDTO> productMap = new HashMap<>();
+        double totalAmount = 0.0;
+        double paidAmount = 0.0;
+        double remainingBalance = 0.0;
+
+        for (Sales sale : pendingSales) {
+            totalAmount += sale.getTotal();
+            paidAmount += sale.getAmount();
+            remainingBalance += (sale.getTotal() - sale.getAmount());
+
+            for (SaleProduct saleProduct : sale.getSaleProducts()) {
+                ProductsDTO productDTO = new ProductsDTO(saleProduct.getProduct(), saleProduct.getQuantity());
+
+                if (productMap.containsKey(productDTO.getId())) {
+                    ProductsDTO existingProduct = productMap.get(productDTO.getId());
+                    existingProduct.setQuantity(existingProduct.getQuantity() + productDTO.getQuantity());
+                } else {
+                    productMap.put(productDTO.getId(), productDTO);
+                }
+            }
+        }
+
+        // Convertir el mapa de productos a una lista
+        List<ProductsDTO> products = new ArrayList<>(productMap.values());
+
+        // Obtener el cliente
+        Clients client = pendingSales.get(0).getClient();
+        ClientDTO clientDTO = new ClientDTO(client);
+
+        // Crear el ClientDebtDTO consolidado
+        ClientDebtDTO clientDebt = new ClientDebtDTO(
+                clientDTO,
+                products,
+                totalAmount,
+                paidAmount,
+                remainingBalance,
+                "pendiente");
+
+        return List.of(clientDebt);
     }
 }

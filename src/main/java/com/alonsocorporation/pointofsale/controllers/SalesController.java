@@ -1,5 +1,6 @@
 package com.alonsocorporation.pointofsale.controllers;
 
+import com.alonsocorporation.pointofsale.dto.response.ClientDebtDTO;
 import com.alonsocorporation.pointofsale.dto.response.SalesDTO;
 import com.alonsocorporation.pointofsale.entities.Sales;
 import com.alonsocorporation.pointofsale.services.SalesService;
@@ -40,5 +41,10 @@ public class SalesController {
     @DeleteMapping("/{id}")
     public void deleteSale(@PathVariable Long id) {
         salesService.delete(id);
+    }
+
+    @GetMapping("/client-debts/{clientId}")
+    public List<ClientDebtDTO> getClientDebts(@PathVariable Long clientId) {
+        return salesService.getClientDebts(clientId);
     }
 }
