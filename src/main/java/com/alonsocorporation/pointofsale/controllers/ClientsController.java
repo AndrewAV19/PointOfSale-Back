@@ -55,4 +55,9 @@ public class ClientsController {
         clientsService.delete(id);
         return ResponseEntity.noContent().build();
     }
+
+    @GetMapping("/pending-payments")
+    public List<Clients> getClientsWithPendingPayments() {
+        return clientsService.getClientsWithPendingPayments();
+    }
 }

@@ -1,23 +1,28 @@
 package com.alonsocorporation.pointofsale.services.impl;
 
 import com.alonsocorporation.pointofsale.entities.Clients;
+import com.alonsocorporation.pointofsale.entities.Sales;
 import com.alonsocorporation.pointofsale.exceptions.ClientAlreadyExistsException;
 import com.alonsocorporation.pointofsale.exceptions.ClientNotFoundException;
 import com.alonsocorporation.pointofsale.repositories.ClientsRepository;
+import com.alonsocorporation.pointofsale.repositories.SalesRepository;
 import com.alonsocorporation.pointofsale.services.ClientsService;
 
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class ClientsServiceImpl implements ClientsService {
 
     private final ClientsRepository clientsRepository;
+    private final SalesRepository salesRepository;
 
-    public ClientsServiceImpl(ClientsRepository clientsRepository) {
+    public ClientsServiceImpl(ClientsRepository clientsRepository, SalesRepository salesRepository) {
         this.clientsRepository = clientsRepository;
+        this.salesRepository = salesRepository;
     }
 
     @Override
@@ -85,5 +90,14 @@ public class ClientsServiceImpl implements ClientsService {
             throw new ClientNotFoundException(id);
         }
         clientsRepository.deleteById(id);
+    }
+
+    @Override
+    public List<Clients> getClientsWithPendingPayments() {
+        List<Sales> pendingSales = salesRepository.findByState("pendiente");
+        return pendingSales.stream()
+                .map(Sales::getClient)
+                .distinct()
+                .collect(Collectors.toList());
     }
 }

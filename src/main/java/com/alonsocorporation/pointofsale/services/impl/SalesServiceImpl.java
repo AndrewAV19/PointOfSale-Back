@@ -155,4 +155,12 @@ public class SalesServiceImpl implements SalesService {
             throw new ProductNotFoundException(id);
         }
     }
+
+    @Override
+    public List<SalesDTO> getSalesByState(String state) {
+        return salesRepository.findByState(state)
+                .stream()
+                .map(SalesDTO::new)
+                .collect(Collectors.toList());
+    }
 }

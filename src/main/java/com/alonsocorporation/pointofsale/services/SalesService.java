@@ -10,4 +10,5 @@ public interface SalesService {
     SalesDTO create(Sales sales);
     SalesDTO update(Long id, Sales sales);
     void delete(Long id);
+    List<SalesDTO> getSalesByState(String state);
 }

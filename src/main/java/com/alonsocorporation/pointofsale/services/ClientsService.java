@@ -9,4 +9,5 @@ public interface ClientsService {
     Clients create(Clients client);
     Clients update(Long id, Clients client);
     void delete(Long id);
+    List<Clients> getClientsWithPendingPayments();
 }

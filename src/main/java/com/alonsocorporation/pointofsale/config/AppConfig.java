@@ -3,14 +3,9 @@ package com.alonsocorporation.pointofsale.config;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
-
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
-
 import com.alonsocorporation.pointofsale.entities.Role;
 import com.alonsocorporation.pointofsale.entities.User;
 import com.alonsocorporation.pointofsale.repositories.RoleRepository;
@@ -22,16 +17,9 @@ public class AppConfig {
     private final UserService userService;
     private final RoleRepository roleRepository;
 
-    @Value("${user.passwordInitial}")
-    private String passwordInitial;
-
-     private final PasswordEncoder passwordEncoder;
-
-
-    public AppConfig(UserService userService, RoleRepository roleRepository, PasswordEncoder passwordEncoder) {
+    public AppConfig(UserService userService, RoleRepository roleRepository) {
         this.userService = userService;
         this.roleRepository = roleRepository;
-        this.passwordEncoder = passwordEncoder;
     }
 
     @Bean

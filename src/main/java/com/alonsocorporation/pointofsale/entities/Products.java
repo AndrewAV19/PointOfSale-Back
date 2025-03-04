@@ -6,8 +6,6 @@ import lombok.Data;
 import java.time.LocalDateTime;
 import java.util.List;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-
 @Entity
 @Data
 @Table(name = "products")
