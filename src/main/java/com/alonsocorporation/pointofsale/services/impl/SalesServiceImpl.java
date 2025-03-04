@@ -22,7 +22,7 @@ public class SalesServiceImpl implements SalesService {
     private final SaleProductRepository saleProductRepository;
 
     public SalesServiceImpl(SalesRepository salesRepository, ProductsRepository productsRepository,
-                            ClientsRepository clientsRepository, SaleProductRepository saleProductRepository) {
+            ClientsRepository clientsRepository, SaleProductRepository saleProductRepository) {
         this.salesRepository = salesRepository;
         this.productsRepository = productsRepository;
         this.clientsRepository = clientsRepository;
@@ -45,39 +45,40 @@ public class SalesServiceImpl implements SalesService {
     }
 
     @Override
-public SalesDTO create(Sales sale) {
-    if (sale.getSaleProducts() == null) {
-        sale.setSaleProducts(new ArrayList<>());
-    }
-
-    for (SaleProduct saleProduct : sale.getSaleProducts()) {
-        Products product = productsRepository.findById(saleProduct.getProduct().getId())
-                .orElseThrow(() -> new RuntimeException("Product not found with id " + saleProduct.getProduct().getId()));
-
-        if (product.getStock() < saleProduct.getQuantity()) {
-            throw new RuntimeException("Not enough stock for product " + product.getName());
+    public SalesDTO create(Sales sale) {
+        if (sale.getSaleProducts() == null) {
+            sale.setSaleProducts(new ArrayList<>());
         }
 
-        product.setStock(product.getStock() - saleProduct.getQuantity());
-        productsRepository.save(product);
+        for (SaleProduct saleProduct : sale.getSaleProducts()) {
+            Products product = productsRepository.findById(saleProduct.getProduct().getId())
+                    .orElseThrow(() -> new RuntimeException(
+                            "Product not found with id " + saleProduct.getProduct().getId()));
 
-        // Establece la relación bidireccional
-        saleProduct.setSale(sale);
-        saleProduct.setProduct(product);
+            if (product.getStock() < saleProduct.getQuantity()) {
+                throw new RuntimeException("Not enough stock for product " + product.getName());
+            }
+
+            product.setStock(product.getStock() - saleProduct.getQuantity());
+            productsRepository.save(product);
+
+            // Establece la relación bidireccional
+            saleProduct.setSale(sale);
+            saleProduct.setProduct(product);
+        }
+
+        if (sale.getClient() != null && sale.getClient().getId() != 0) {
+            Clients client = clientsRepository.findById(sale.getClient().getId())
+                    .orElseThrow(() -> new RuntimeException("Client not found with id " + sale.getClient().getId()));
+            sale.setClient(client);
+        } else {
+            sale.setClient(null);
+        }
+
+        // Guarda la venta y los productos asociados
+        Sales savedSale = salesRepository.save(sale);
+        return new SalesDTO(savedSale);
     }
-
-    if (sale.getClient() != null && sale.getClient().getId() != 0) {
-        Clients client = clientsRepository.findById(sale.getClient().getId())
-                .orElseThrow(() -> new RuntimeException("Client not found with id " + sale.getClient().getId()));
-        sale.setClient(client);
-    } else {
-        sale.setClient(null);
-    }
-
-    // Guarda la venta y los productos asociados
-    Sales savedSale = salesRepository.save(sale);
-    return new SalesDTO(savedSale);
-}
 
     @Override
     public SalesDTO update(Long id, Sales salesDetails) {
@@ -88,9 +89,16 @@ public SalesDTO create(Sales sale) {
             if (salesDetails.getClient() != null) {
                 sale.setClient(salesDetails.getClient());
             }
+
             if (salesDetails.getSaleProducts() != null) {
-                sale.setSaleProducts(salesDetails.getSaleProducts());
+                sale.getSaleProducts().clear();
+
+                for (SaleProduct saleProduct : salesDetails.getSaleProducts()) {
+                    saleProduct.setSale(sale); // 🔥 Relación correcta
+                    sale.getSaleProducts().add(saleProduct);
+                }
             }
+
             if (salesDetails.getAmount() != null && salesDetails.getAmount() >= 0) {
                 sale.setAmount(salesDetails.getAmount());
             }
