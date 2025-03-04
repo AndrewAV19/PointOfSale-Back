@@ -86,17 +86,39 @@ public class SalesServiceImpl implements SalesService {
         if (saleOptional.isPresent()) {
             Sales sale = saleOptional.get();
 
-            if (salesDetails.getClient() != null) {
-                sale.setClient(salesDetails.getClient());
+            // Devolver stock de los productos antiguos antes de eliminarlos
+            for (SaleProduct oldProduct : sale.getSaleProducts()) {
+                Products product = productsRepository.findById(oldProduct.getProduct().getId())
+                        .orElseThrow(() -> new RuntimeException(
+                                "Product not found with id " + oldProduct.getProduct().getId()));
+                product.setStock(product.getStock() + oldProduct.getQuantity());
+                productsRepository.save(product);
             }
 
-            if (salesDetails.getSaleProducts() != null) {
-                sale.getSaleProducts().clear();
+            // Limpiar productos anteriores
+            sale.getSaleProducts().clear();
 
+            // Agregar nuevos productos y RESTAR stock
+            if (salesDetails.getSaleProducts() != null) {
                 for (SaleProduct saleProduct : salesDetails.getSaleProducts()) {
-                    saleProduct.setSale(sale); // 🔥 Relación correcta
+                    Products product = productsRepository.findById(saleProduct.getProduct().getId())
+                            .orElseThrow(() -> new RuntimeException(
+                                    "Product not found with id " + saleProduct.getProduct().getId()));
+
+                    if (product.getStock() < saleProduct.getQuantity()) {
+                        throw new RuntimeException("Not enough stock for product " + product.getName());
+                    }
+
+                    product.setStock(product.getStock() - saleProduct.getQuantity());
+                    productsRepository.save(product);
+
+                    saleProduct.setSale(sale);
                     sale.getSaleProducts().add(saleProduct);
                 }
+            }
+
+            if (salesDetails.getClient() != null) {
+                sale.setClient(salesDetails.getClient());
             }
 
             if (salesDetails.getAmount() != null && salesDetails.getAmount() >= 0) {
