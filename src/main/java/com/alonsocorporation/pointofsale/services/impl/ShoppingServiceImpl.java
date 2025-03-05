@@ -1,6 +1,9 @@
 package com.alonsocorporation.pointofsale.services.impl;
 
+import com.alonsocorporation.pointofsale.dto.response.DailyExpenseDTO;
+import com.alonsocorporation.pointofsale.dto.response.MonthlyExpenseDTO;
 import com.alonsocorporation.pointofsale.dto.response.ShoppingDTO;
+import com.alonsocorporation.pointofsale.dto.response.YearlyExpenseDTO;
 import com.alonsocorporation.pointofsale.entities.*;
 import com.alonsocorporation.pointofsale.exceptions.ProductNotFoundException;
 import com.alonsocorporation.pointofsale.repositories.*;
@@ -8,8 +11,13 @@ import com.alonsocorporation.pointofsale.services.ShoppingService;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -24,7 +32,8 @@ public class ShoppingServiceImpl implements ShoppingService {
     private final ShoppingProductRepository shoppingProductRepository;
 
     public ShoppingServiceImpl(ShoppingRepository shoppingRepository, ProductsRepository productsRepository,
-            SuppliersRepository suppliersRepository, UserRepository userRepository,ShoppingProductRepository shoppingProductRepository) {
+            SuppliersRepository suppliersRepository, UserRepository userRepository,
+            ShoppingProductRepository shoppingProductRepository) {
         this.shoppingRepository = shoppingRepository;
         this.productsRepository = productsRepository;
         this.suppliersRepository = suppliersRepository;
@@ -160,5 +169,123 @@ public class ShoppingServiceImpl implements ShoppingService {
         } else {
             throw new ProductNotFoundException(id);
         }
+    }
+
+    @Override
+    public DailyExpenseDTO getDailyExpense(int year, int month, int day) {
+        LocalDateTime startOfDay = LocalDateTime.of(year, month, day, 0, 0, 0);
+        LocalDateTime endOfDay = LocalDateTime.of(year, month, day, 23, 59, 59);
+
+        List<Shopping> dailyShoppings = shoppingRepository.findByCreatedAtBetween(startOfDay, endOfDay);
+
+        // Calcular egresos totales
+        Double totalExpense = dailyShoppings.stream()
+                .mapToDouble(Shopping::getTotal)
+                .sum();
+
+        // Número de transacciones
+        Integer numberOfTransactions = dailyShoppings.size();
+
+        // Ticket promedio
+        Double averageTicket = numberOfTransactions > 0
+                ? BigDecimal.valueOf(totalExpense / numberOfTransactions)
+                        .setScale(2, RoundingMode.HALF_UP)
+                        .doubleValue()
+                : 0.0;
+
+        // Egresos por hora
+        Map<Integer, Double> expenseByHour = dailyShoppings.stream()
+                .collect(Collectors.groupingBy(
+                        shopping -> shopping.getCreatedAt().getHour(),
+                        Collectors.summingDouble(Shopping::getTotal)));
+
+        // Últimas 5 transacciones
+        List<ShoppingDTO> lastFiveTransactions = dailyShoppings.stream()
+                .sorted((s1, s2) -> s2.getCreatedAt().compareTo(s1.getCreatedAt()))
+                .limit(5)
+                .map(ShoppingDTO::new)
+                .collect(Collectors.toList());
+
+        return new DailyExpenseDTO(totalExpense, numberOfTransactions, averageTicket, expenseByHour,
+                lastFiveTransactions);
+    }
+
+    @Override
+    public MonthlyExpenseDTO getMonthlyExpense(int year, int month) {
+        LocalDateTime startOfMonth = LocalDateTime.of(year, month, 1, 0, 0, 0);
+        LocalDateTime endOfMonth = LocalDateTime.of(year, month, startOfMonth.toLocalDate().lengthOfMonth(), 23, 59,
+                59);
+
+        List<Shopping> monthlyShoppings = shoppingRepository.findByCreatedAtBetween(startOfMonth, endOfMonth);
+
+        // Calcular egresos totales
+        Double totalExpense = monthlyShoppings.stream()
+                .mapToDouble(Shopping::getTotal)
+                .sum();
+
+        // Número de transacciones
+        Integer numberOfTransactions = monthlyShoppings.size();
+
+        // Ticket promedio
+        Double averageTicket = numberOfTransactions > 0
+                ? BigDecimal.valueOf(totalExpense / numberOfTransactions)
+                        .setScale(2, RoundingMode.HALF_UP)
+                        .doubleValue()
+                : 0.0;
+
+        // Egresos por día
+        Map<Integer, Double> expenseByDay = monthlyShoppings.stream()
+                .collect(Collectors.groupingBy(
+                        shopping -> shopping.getCreatedAt().getDayOfMonth(),
+                        Collectors.summingDouble(Shopping::getTotal)));
+
+        // Últimas 5 transacciones
+        List<ShoppingDTO> lastFiveTransactions = monthlyShoppings.stream()
+                .sorted((s1, s2) -> s2.getCreatedAt().compareTo(s1.getCreatedAt()))
+                .limit(5)
+                .map(ShoppingDTO::new)
+                .collect(Collectors.toList());
+
+        return new MonthlyExpenseDTO(totalExpense, numberOfTransactions, averageTicket, expenseByDay,
+                lastFiveTransactions);
+    }
+
+    @Override
+    public YearlyExpenseDTO getYearlyExpense(int year) {
+        LocalDateTime startOfYear = LocalDateTime.of(year, 1, 1, 0, 0, 0);
+        LocalDateTime endOfYear = LocalDateTime.of(year, 12, 31, 23, 59, 59);
+
+        List<Shopping> yearlyShoppings = shoppingRepository.findByCreatedAtBetween(startOfYear, endOfYear);
+
+        // Calcular egresos totales
+        Double totalExpense = yearlyShoppings.stream()
+                .mapToDouble(Shopping::getTotal)
+                .sum();
+
+        // Número de transacciones
+        Integer numberOfTransactions = yearlyShoppings.size();
+
+        // Ticket promedio
+        Double averageTicket = numberOfTransactions > 0
+                ? BigDecimal.valueOf(totalExpense / numberOfTransactions)
+                        .setScale(2, RoundingMode.HALF_UP)
+                        .doubleValue()
+                : 0.0;
+
+        // Egresos por mes
+        Map<Integer, Double> expenseByMonth = yearlyShoppings.stream()
+                .collect(Collectors.groupingBy(
+                        shopping -> shopping.getCreatedAt().getMonthValue(),
+                        Collectors.summingDouble(Shopping::getTotal)));
+
+        // Últimas 5 transacciones
+        List<ShoppingDTO> lastFiveTransactions = yearlyShoppings.stream()
+                .sorted((s1, s2) -> s2.getCreatedAt().compareTo(s1.getCreatedAt()))
+                .limit(5)
+                .map(ShoppingDTO::new)
+                .collect(Collectors.toList());
+
+        return new YearlyExpenseDTO(totalExpense, numberOfTransactions, averageTicket, expenseByMonth,
+                lastFiveTransactions);
     }
 }
