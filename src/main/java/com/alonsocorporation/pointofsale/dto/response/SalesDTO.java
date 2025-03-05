@@ -11,6 +11,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 public class SalesDTO {
     private Long id;
     private ClientDTO client;
+    private UserDTO user;
     private List<SaleProductDTO> saleProducts;
     private Double amount;
     private String state;
@@ -20,6 +21,7 @@ public class SalesDTO {
     public SalesDTO(Sales sale) {
         this.id = sale.getId();
         this.client = sale.getClient() != null ? new ClientDTO(sale.getClient()) : null;
+        this.user = sale.getUser() != null ? new UserDTO(sale.getUser()) : null;
         this.saleProducts = sale.getSaleProducts() != null
                 ? sale.getSaleProducts().stream().map(SaleProductDTO::new).toList()
                 : List.of();

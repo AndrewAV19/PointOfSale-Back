@@ -20,13 +20,15 @@ public class ShoppingServiceImpl implements ShoppingService {
     private final ShoppingRepository shoppingRepository;
     private final ProductsRepository productsRepository;
     private final SuppliersRepository suppliersRepository;
+    private final UserRepository userRepository;
     private final ShoppingProductRepository shoppingProductRepository;
 
     public ShoppingServiceImpl(ShoppingRepository shoppingRepository, ProductsRepository productsRepository,
-            SuppliersRepository suppliersRepository, ShoppingProductRepository shoppingProductRepository) {
+            SuppliersRepository suppliersRepository, UserRepository userRepository,ShoppingProductRepository shoppingProductRepository) {
         this.shoppingRepository = shoppingRepository;
         this.productsRepository = productsRepository;
         this.suppliersRepository = suppliersRepository;
+        this.userRepository = userRepository;
         this.shoppingProductRepository = shoppingProductRepository;
     }
 
@@ -73,6 +75,15 @@ public class ShoppingServiceImpl implements ShoppingService {
             shopping.setSupplier(null);
         }
 
+        if (shopping.getUser() != null && shopping.getUser().getId() != 0) {
+            User user = userRepository.findById(shopping.getUser().getId())
+                    .orElseThrow(
+                            () -> new RuntimeException("User not found with id " + shopping.getUser().getId()));
+            shopping.setUser(user);
+        } else {
+            shopping.setUser(null);
+        }
+
         // Guarda la venta y los productos asociados
         Shopping savedShopping = shoppingRepository.save(shopping);
         return new ShoppingDTO(savedShopping);
@@ -113,6 +124,10 @@ public class ShoppingServiceImpl implements ShoppingService {
 
             if (salesDetails.getSupplier() != null) {
                 shopping.setSupplier(salesDetails.getSupplier());
+            }
+
+            if (salesDetails.getUser() != null) {
+                shopping.setUser(salesDetails.getUser());
             }
 
             if (salesDetails.getAmount() != null && salesDetails.getAmount() >= 0) {

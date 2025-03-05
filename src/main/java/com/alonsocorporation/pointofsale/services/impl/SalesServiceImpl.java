@@ -29,13 +29,15 @@ public class SalesServiceImpl implements SalesService {
     private final SalesRepository salesRepository;
     private final ProductsRepository productsRepository;
     private final ClientsRepository clientsRepository;
+    private final UserRepository userRepository;
     private final SaleProductRepository saleProductRepository;
 
     public SalesServiceImpl(SalesRepository salesRepository, ProductsRepository productsRepository,
-            ClientsRepository clientsRepository, SaleProductRepository saleProductRepository) {
+            ClientsRepository clientsRepository,UserRepository userRepository , SaleProductRepository saleProductRepository) {
         this.salesRepository = salesRepository;
         this.productsRepository = productsRepository;
         this.clientsRepository = clientsRepository;
+        this.userRepository = userRepository;
         this.saleProductRepository = saleProductRepository;
     }
 
@@ -85,6 +87,14 @@ public class SalesServiceImpl implements SalesService {
             sale.setClient(null);
         }
 
+        if (sale.getUser() != null && sale.getUser().getId() != 0) {
+            User user = userRepository.findById(sale.getUser().getId())
+                    .orElseThrow(() -> new RuntimeException("User not found with id " + sale.getUser().getId()));
+            sale.setUser(user);
+        } else {
+            sale.setClient(null);
+        }
+
         // Guarda la venta y los productos asociados
         Sales savedSale = salesRepository.save(sale);
         return new SalesDTO(savedSale);
@@ -129,6 +139,10 @@ public class SalesServiceImpl implements SalesService {
 
             if (salesDetails.getClient() != null) {
                 sale.setClient(salesDetails.getClient());
+            }
+
+            if (salesDetails.getUser() != null) {
+                sale.setUser(salesDetails.getUser());
             }
 
             if (salesDetails.getAmount() != null && salesDetails.getAmount() >= 0) {

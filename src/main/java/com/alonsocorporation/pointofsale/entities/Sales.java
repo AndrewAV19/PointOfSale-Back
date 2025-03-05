@@ -19,6 +19,10 @@ public class Sales {
     @JoinColumn(name = "client_id", nullable = true)
     private Clients client;
 
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "user_id", nullable = true)
+    private User user;
+
     @OneToMany(mappedBy = "sale", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<SaleProduct> saleProducts;
 

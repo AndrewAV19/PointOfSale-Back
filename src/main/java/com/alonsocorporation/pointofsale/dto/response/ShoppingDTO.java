@@ -11,6 +11,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 public class ShoppingDTO {
     private Long id;
     private SupplierDTO supplier;
+    private UserDTO user;
     private List<ShoppingProductDTO> shoppingProducts;
     private Double amount;
     private Double total;
@@ -19,6 +20,7 @@ public class ShoppingDTO {
     public ShoppingDTO(Shopping shopping) {
         this.id = shopping.getId();
         this.supplier = shopping.getSupplier() != null ? new SupplierDTO(shopping.getSupplier()) : null;
+        this.user = shopping.getUser() != null ? new UserDTO(shopping.getUser()) : null;
         this.shoppingProducts = shopping.getShoppingProducts() != null
                 ? shopping.getShoppingProducts().stream().map(ShoppingProductDTO::new).toList()
                 : List.of();

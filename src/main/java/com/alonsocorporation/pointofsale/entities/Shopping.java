@@ -19,6 +19,10 @@ public class Shopping {
     @JoinColumn(name = "supplier_id", nullable = true)
     private Suppliers supplier;
 
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "user_id", nullable = true)
+    private User user;
+
     @OneToMany(mappedBy = "shopping", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ShoppingProduct> shoppingProducts;
 
