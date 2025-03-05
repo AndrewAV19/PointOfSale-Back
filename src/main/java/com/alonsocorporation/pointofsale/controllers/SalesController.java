@@ -2,7 +2,9 @@ package com.alonsocorporation.pointofsale.controllers;
 
 import com.alonsocorporation.pointofsale.dto.response.ClientDebtDTO;
 import com.alonsocorporation.pointofsale.dto.response.DailyIncomeDTO;
+import com.alonsocorporation.pointofsale.dto.response.MonthlyIncomeDTO;
 import com.alonsocorporation.pointofsale.dto.response.SalesDTO;
+import com.alonsocorporation.pointofsale.dto.response.YearlyIncomeDTO;
 import com.alonsocorporation.pointofsale.entities.Sales;
 import com.alonsocorporation.pointofsale.services.SalesService;
 import org.springframework.web.bind.annotation.*;
@@ -50,7 +52,17 @@ public class SalesController {
     }
 
     @GetMapping("/daily-income")
-    public DailyIncomeDTO getDailyIncome() {
-        return salesService.getDailyIncome();
+    public DailyIncomeDTO getDailyIncome(@RequestParam int year, @RequestParam int month, @RequestParam int day) {
+        return salesService.getDailyIncome(year, month, day);
+    }
+
+    @GetMapping("/monthly-income")
+    public MonthlyIncomeDTO getMonthlyIncome(@RequestParam int year, @RequestParam int month) {
+        return salesService.getMonthlyIncome(year, month);
+    }
+
+    @GetMapping("/yearly-income")
+    public YearlyIncomeDTO getYearlyIncome(@RequestParam int year) {
+        return salesService.getYearlyIncome(year);
     }
 }

@@ -3,8 +3,10 @@ package com.alonsocorporation.pointofsale.services.impl;
 import com.alonsocorporation.pointofsale.dto.response.ClientDTO;
 import com.alonsocorporation.pointofsale.dto.response.ClientDebtDTO;
 import com.alonsocorporation.pointofsale.dto.response.DailyIncomeDTO;
+import com.alonsocorporation.pointofsale.dto.response.MonthlyIncomeDTO;
 import com.alonsocorporation.pointofsale.dto.response.ProductsDTO;
 import com.alonsocorporation.pointofsale.dto.response.SalesDTO;
+import com.alonsocorporation.pointofsale.dto.response.YearlyIncomeDTO;
 import com.alonsocorporation.pointofsale.entities.*;
 import com.alonsocorporation.pointofsale.exceptions.ProductNotFoundException;
 import com.alonsocorporation.pointofsale.repositories.*;
@@ -33,7 +35,8 @@ public class SalesServiceImpl implements SalesService {
     private final SaleProductRepository saleProductRepository;
 
     public SalesServiceImpl(SalesRepository salesRepository, ProductsRepository productsRepository,
-            ClientsRepository clientsRepository,UserRepository userRepository , SaleProductRepository saleProductRepository) {
+            ClientsRepository clientsRepository, UserRepository userRepository,
+            SaleProductRepository saleProductRepository) {
         this.salesRepository = salesRepository;
         this.productsRepository = productsRepository;
         this.clientsRepository = clientsRepository;
@@ -241,12 +244,11 @@ public class SalesServiceImpl implements SalesService {
     }
 
     @Override
-    public DailyIncomeDTO getDailyIncome() {
-        LocalDateTime startOfDay = LocalDateTime.now().withHour(0).withMinute(0).withSecond(0).withNano(0);
-        LocalDateTime endOfDay = LocalDateTime.now().withHour(23).withMinute(59).withSecond(59).withNano(999999999);
+    public DailyIncomeDTO getDailyIncome(int year, int month, int day) {
+        LocalDateTime startOfDay = LocalDateTime.of(year, month, day, 0, 0, 0);
+        LocalDateTime endOfDay = LocalDateTime.of(year, month, day, 23, 59, 59);
 
         List<Sales> dailySales = salesRepository.findByCreatedAtBetween(startOfDay, endOfDay);
-
         // Calcular ingresos totales
         Double totalIncome = dailySales.stream()
                 .mapToDouble(sale -> {
@@ -288,5 +290,106 @@ public class SalesServiceImpl implements SalesService {
                 .collect(Collectors.toList());
 
         return new DailyIncomeDTO(totalIncome, numberOfTransactions, averageTicket, incomeByHour, lastFiveTransactions);
+    }
+
+    @Override
+    public MonthlyIncomeDTO getMonthlyIncome(int year, int month) {
+        LocalDateTime startOfMonth = LocalDateTime.of(year, month, 1, 0, 0, 0);
+        LocalDateTime endOfMonth = LocalDateTime.of(year, month, startOfMonth.toLocalDate().lengthOfMonth(), 23, 59,
+                59);
+
+        List<Sales> monthlySales = salesRepository.findByCreatedAtBetween(startOfMonth, endOfMonth);
+        // Calcular ingresos totales
+        Double totalIncome = monthlySales.stream()
+                .mapToDouble(sale -> {
+                    if ("pendiente".equalsIgnoreCase(sale.getState())) {
+                        return sale.getAmount() != null ? sale.getAmount() : 0.0;
+                    } else {
+                        return sale.getTotal() != null ? sale.getTotal() : 0.0;
+                    }
+                })
+                .sum();
+
+        // Número de transacciones
+        Integer numberOfTransactions = monthlySales.size();
+
+        // Ticket promedio
+        Double averageTicket = numberOfTransactions > 0
+                ? BigDecimal.valueOf(totalIncome / numberOfTransactions)
+                        .setScale(2, RoundingMode.HALF_UP)
+                        .doubleValue()
+                : 0.0;
+
+        // Ingresos por día
+        Map<Integer, Double> incomeByDay = monthlySales.stream()
+                .collect(Collectors.groupingBy(
+                        sale -> sale.getCreatedAt().getDayOfMonth(),
+                        Collectors.summingDouble(sale -> {
+                            if ("pendiente".equalsIgnoreCase(sale.getState())) {
+                                return sale.getAmount() != null ? sale.getAmount() : 0.0;
+                            } else {
+                                return sale.getTotal() != null ? sale.getTotal() : 0.0;
+                            }
+                        })));
+
+        // Últimas 5 transacciones
+        List<SalesDTO> lastFiveTransactions = monthlySales.stream()
+                .sorted((s1, s2) -> s2.getCreatedAt().compareTo(s1.getCreatedAt()))
+                .limit(5)
+                .map(SalesDTO::new)
+                .collect(Collectors.toList());
+
+        return new MonthlyIncomeDTO(totalIncome, numberOfTransactions, averageTicket, incomeByDay,
+                lastFiveTransactions);
+    }
+
+    @Override
+    public YearlyIncomeDTO getYearlyIncome(int year) {
+        LocalDateTime startOfYear = LocalDateTime.of(year, 1, 1, 0, 0, 0);
+        LocalDateTime endOfYear = LocalDateTime.of(year, 12, 31, 23, 59, 59);
+
+        List<Sales> yearlySales = salesRepository.findByCreatedAtBetween(startOfYear, endOfYear);
+        // Calcular ingresos totales
+        Double totalIncome = yearlySales.stream()
+                .mapToDouble(sale -> {
+                    if ("pendiente".equalsIgnoreCase(sale.getState())) {
+                        return sale.getAmount() != null ? sale.getAmount() : 0.0;
+                    } else {
+                        return sale.getTotal() != null ? sale.getTotal() : 0.0;
+                    }
+                })
+                .sum();
+
+        // Número de transacciones
+        Integer numberOfTransactions = yearlySales.size();
+
+        // Ticket promedio
+        Double averageTicket = numberOfTransactions > 0
+                ? BigDecimal.valueOf(totalIncome / numberOfTransactions)
+                        .setScale(2, RoundingMode.HALF_UP)
+                        .doubleValue()
+                : 0.0;
+
+        // Ingresos por mes
+        Map<Integer, Double> incomeByMonth = yearlySales.stream()
+                .collect(Collectors.groupingBy(
+                        sale -> sale.getCreatedAt().getMonthValue(),
+                        Collectors.summingDouble(sale -> {
+                            if ("pendiente".equalsIgnoreCase(sale.getState())) {
+                                return sale.getAmount() != null ? sale.getAmount() : 0.0;
+                            } else {
+                                return sale.getTotal() != null ? sale.getTotal() : 0.0;
+                            }
+                        })));
+
+        // Últimas 5 transacciones
+        List<SalesDTO> lastFiveTransactions = yearlySales.stream()
+                .sorted((s1, s2) -> s2.getCreatedAt().compareTo(s1.getCreatedAt()))
+                .limit(5)
+                .map(SalesDTO::new)
+                .collect(Collectors.toList());
+
+        return new YearlyIncomeDTO(totalIncome, numberOfTransactions, averageTicket, incomeByMonth,
+                lastFiveTransactions);
     }
 }
