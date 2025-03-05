@@ -12,6 +12,7 @@ import com.alonsocorporation.pointofsale.services.ProductsService;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -40,6 +41,7 @@ public class ProductsServiceImpl implements ProductsService {
     public List<ProductDTO> getAll() {
         return productsRepository.findAll()
                 .stream()
+                .sorted(Comparator.comparing(Products::getStock))
                 .map(ProductDTO::new)
                 .collect(Collectors.toList());
     }

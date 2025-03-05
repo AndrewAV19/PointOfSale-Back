@@ -45,6 +45,7 @@ public class ShoppingServiceImpl implements ShoppingService {
     public List<ShoppingDTO> getAll() {
         return shoppingRepository.findAll()
                 .stream()
+                .sorted((s1, s2) -> s2.getCreatedAt().compareTo(s1.getCreatedAt()))
                 .map(ShoppingDTO::new)
                 .collect(Collectors.toList());
     }

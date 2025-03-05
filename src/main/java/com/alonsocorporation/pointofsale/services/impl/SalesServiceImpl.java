@@ -48,6 +48,7 @@ public class SalesServiceImpl implements SalesService {
     public List<SalesDTO> getAll() {
         return salesRepository.findAll()
                 .stream()
+                .sorted((s1, s2) -> s2.getCreatedAt().compareTo(s1.getCreatedAt()))
                 .map(SalesDTO::new)
                 .collect(Collectors.toList());
     }
