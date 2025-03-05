@@ -1,6 +1,7 @@
 package com.alonsocorporation.pointofsale.controllers;
 
 import com.alonsocorporation.pointofsale.dto.response.ClientDebtDTO;
+import com.alonsocorporation.pointofsale.dto.response.DailyIncomeDTO;
 import com.alonsocorporation.pointofsale.dto.response.SalesDTO;
 import com.alonsocorporation.pointofsale.entities.Sales;
 import com.alonsocorporation.pointofsale.services.SalesService;
@@ -46,5 +47,10 @@ public class SalesController {
     @GetMapping("/client-debts/{clientId}")
     public List<ClientDebtDTO> getClientDebts(@PathVariable Long clientId) {
         return salesService.getClientDebts(clientId);
+    }
+
+    @GetMapping("/daily-income")
+    public DailyIncomeDTO getDailyIncome() {
+        return salesService.getDailyIncome();
     }
 }

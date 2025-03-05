@@ -3,6 +3,7 @@ package com.alonsocorporation.pointofsale.services;
 import com.alonsocorporation.pointofsale.entities.Sales;
 import java.util.List;
 import com.alonsocorporation.pointofsale.dto.response.ClientDebtDTO;
+import com.alonsocorporation.pointofsale.dto.response.DailyIncomeDTO;
 import com.alonsocorporation.pointofsale.dto.response.SalesDTO;
 
 public interface SalesService {
@@ -13,4 +14,5 @@ public interface SalesService {
     void delete(Long id);
     List<SalesDTO> getSalesByState(String state);
     List<ClientDebtDTO> getClientDebts(Long clientId);
+    DailyIncomeDTO getDailyIncome();
 }

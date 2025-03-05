@@ -2,6 +2,7 @@ package com.alonsocorporation.pointofsale.services.impl;
 
 import com.alonsocorporation.pointofsale.dto.response.ClientDTO;
 import com.alonsocorporation.pointofsale.dto.response.ClientDebtDTO;
+import com.alonsocorporation.pointofsale.dto.response.DailyIncomeDTO;
 import com.alonsocorporation.pointofsale.dto.response.ProductsDTO;
 import com.alonsocorporation.pointofsale.dto.response.SalesDTO;
 import com.alonsocorporation.pointofsale.entities.*;
@@ -10,6 +11,10 @@ import com.alonsocorporation.pointofsale.repositories.*;
 import com.alonsocorporation.pointofsale.services.SalesService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -219,5 +224,55 @@ public class SalesServiceImpl implements SalesService {
                 "pendiente");
 
         return List.of(clientDebt);
+    }
+
+    @Override
+    public DailyIncomeDTO getDailyIncome() {
+        LocalDateTime startOfDay = LocalDateTime.now().withHour(0).withMinute(0).withSecond(0).withNano(0);
+        LocalDateTime endOfDay = LocalDateTime.now().withHour(23).withMinute(59).withSecond(59).withNano(999999999);
+
+        List<Sales> dailySales = salesRepository.findByCreatedAtBetween(startOfDay, endOfDay);
+
+        // Calcular ingresos totales
+        Double totalIncome = dailySales.stream()
+                .mapToDouble(sale -> {
+                    if ("pendiente".equalsIgnoreCase(sale.getState())) {
+                        return sale.getAmount() != null ? sale.getAmount() : 0.0;
+                    } else {
+                        return sale.getTotal() != null ? sale.getTotal() : 0.0;
+                    }
+                })
+                .sum();
+
+        // Número de transacciones
+        Integer numberOfTransactions = dailySales.size();
+
+        // Ticket promedio
+        Double averageTicket = numberOfTransactions > 0
+                ? BigDecimal.valueOf(totalIncome / numberOfTransactions)
+                        .setScale(2, RoundingMode.HALF_UP)
+                        .doubleValue()
+                : 0.0;
+
+        // Ingresos por hora
+        Map<Integer, Double> incomeByHour = dailySales.stream()
+                .collect(Collectors.groupingBy(
+                        sale -> sale.getCreatedAt().getHour(),
+                        Collectors.summingDouble(sale -> {
+                            if ("pendiente".equalsIgnoreCase(sale.getState())) {
+                                return sale.getAmount() != null ? sale.getAmount() : 0.0;
+                            } else {
+                                return sale.getTotal() != null ? sale.getTotal() : 0.0;
+                            }
+                        })));
+
+        // Últimas 5 transacciones
+        List<SalesDTO> lastFiveTransactions = dailySales.stream()
+                .sorted((s1, s2) -> s2.getCreatedAt().compareTo(s1.getCreatedAt()))
+                .limit(5)
+                .map(SalesDTO::new)
+                .collect(Collectors.toList());
+
+        return new DailyIncomeDTO(totalIncome, numberOfTransactions, averageTicket, incomeByHour, lastFiveTransactions);
     }
 }
