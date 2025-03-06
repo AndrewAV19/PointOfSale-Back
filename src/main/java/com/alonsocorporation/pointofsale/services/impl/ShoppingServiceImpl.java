@@ -161,7 +161,12 @@ public class ShoppingServiceImpl implements ShoppingService {
 
             for (ShoppingProduct shoppingProduct : shopping.getShoppingProducts()) {
                 Products product = shoppingProduct.getProduct();
-                product.setStock(product.getStock() + shoppingProduct.getQuantity());
+
+                if (product.getStock() - shoppingProduct.getQuantity() < 0) {
+                    throw new RuntimeException("El stock no puede ser negativo para el producto: " + product.getName());
+                }
+
+                product.setStock(product.getStock() - shoppingProduct.getQuantity());
                 productsRepository.save(product);
             }
 
