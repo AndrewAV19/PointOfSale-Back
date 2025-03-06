@@ -59,6 +59,14 @@ public class ProductsServiceImpl implements ProductsService {
             throw new ProductAlreadyExistsException(product.getName());
         });
 
+        if (product.getImage() == null) {
+            product.setImage("");
+        }
+
+        if (product.getBarCode() == null) {
+            product.setBarCode("");
+        }
+
         // Si no se proporcionan proveedores, inicializa una lista vacía
         if (product.getSuppliers() == null) {
             product.setSuppliers(new ArrayList<>());
@@ -95,6 +103,9 @@ public class ProductsServiceImpl implements ProductsService {
         if (productOptional.isPresent()) {
             Products product = productOptional.get();
 
+            if (productDetails.getBarCode() != null) {
+                product.setBarCode(productDetails.getBarCode());
+            }
             if (productDetails.getName() != null) {
                 product.setName(productDetails.getName());
             }
@@ -122,8 +133,8 @@ public class ProductsServiceImpl implements ProductsService {
             if (productDetails.getTaxRate() != null && productDetails.getTaxRate() >= 0) {
                 product.setTaxRate(productDetails.getTaxRate());
             }
-            if (productDetails.getImages() != null && !productDetails.getImages().isEmpty()) {
-                product.setImages(productDetails.getImages());
+            if (productDetails.getImage() != null) {
+                product.setImage(productDetails.getImage());
             }
 
             return new ProductDTO(productsRepository.save(product));

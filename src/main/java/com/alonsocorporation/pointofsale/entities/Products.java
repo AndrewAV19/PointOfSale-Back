@@ -15,6 +15,8 @@ public class Products {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
     private Long id;
+    
+    private String barCode;
 
     @NotBlank
     private String name;
@@ -43,8 +45,8 @@ public class Products {
     @Min(0)
     private Double taxRate;
 
-    @ElementCollection
-    private List<String> images;
+    @Lob
+    private String image;
 
     @Column(updatable = false)
     private LocalDateTime createdAt;

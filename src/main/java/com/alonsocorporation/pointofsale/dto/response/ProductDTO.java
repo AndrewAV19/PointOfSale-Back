@@ -1,9 +1,7 @@
 package com.alonsocorporation.pointofsale.dto.response;
 
 import lombok.Data;
-import java.util.ArrayList;
 import java.util.List;
-
 import com.alonsocorporation.pointofsale.entities.Products;
 import com.fasterxml.jackson.annotation.JsonInclude;
 
@@ -11,6 +9,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class ProductDTO {
     private Long id;
+    private String barCode;
     private String name;
     private String description;
     private Double price;
@@ -20,10 +19,11 @@ public class ProductDTO {
     private Double costPrice;
     private Double discount;
     private Double taxRate;
-    private List<String> images;
+    private String image;
 
     public ProductDTO(Products product) {
         this.id = product.getId();
+        this.barCode = product.getBarCode();
         this.name = product.getName();
         this.description = product.getDescription();
         this.price = product.getPrice();
@@ -35,6 +35,6 @@ public class ProductDTO {
         this.costPrice = product.getCostPrice();
         this.discount = product.getDiscount();
         this.taxRate = product.getTaxRate();
-        this.images = product.getImages() != null ? product.getImages() : new ArrayList<>();
+        this.image = product.getImage();
     }
 }
