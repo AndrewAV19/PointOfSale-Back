@@ -69,6 +69,23 @@ public class UserController {
         return ResponseEntity.noContent().build();
     }
 
+    @PostMapping("/{id}/change-password")
+    public ResponseEntity<?> changePassword(@PathVariable Long id, @RequestBody Map<String, String> request) {
+        String currentPassword = request.get("currentPassword");
+        String newPassword = request.get("newPassword");
+
+        try {
+            boolean success = service.changePassword(id, currentPassword, newPassword);
+            if (success) {
+                return ResponseEntity.ok().body("Password changed successfully");
+            } else {
+                return ResponseEntity.badRequest().body("Failed to change password");
+            }
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
     @PostMapping("/register")
     public ResponseEntity<?> register(@Valid @RequestBody User user, BindingResult result) {
         return create(user, result);

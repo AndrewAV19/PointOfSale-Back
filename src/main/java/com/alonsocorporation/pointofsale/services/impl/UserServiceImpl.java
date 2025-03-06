@@ -63,9 +63,6 @@ public class UserServiceImpl implements UserService {
             if (userDetails.getEmail() != null) {
                 user.setEmail(userDetails.getEmail());
             }
-            if (userDetails.getPassword() != null && !userDetails.getPassword().isEmpty()) {
-                user.setPassword(passwordEncoder.encode(userDetails.getPassword()));
-            }
             if (userDetails.getPhone() != null) {
                 user.setPhone(userDetails.getPhone());
             }
@@ -112,5 +109,23 @@ public class UserServiceImpl implements UserService {
     public User findByEmail(String email) {
         Optional<User> userOptional = repository.findByEmail(email);
         return userOptional.orElse(null);
+    }
+
+    @Override
+    @Transactional
+    public boolean changePassword(Long id, String currentPassword, String newPassword) {
+        Optional<User> userOptional = repository.findById(id);
+        if (userOptional.isPresent()) {
+            User user = userOptional.get();
+            if (passwordEncoder.matches(currentPassword, user.getPassword())) {
+                user.setPassword(passwordEncoder.encode(newPassword));
+                repository.save(user);
+                return true;
+            } else {
+                throw new RuntimeException("Current password is incorrect");
+            }
+        } else {
+            throw new RuntimeException("User not found with id " + id);
+        }
     }
 }
