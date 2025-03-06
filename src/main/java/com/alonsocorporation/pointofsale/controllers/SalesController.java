@@ -46,6 +46,11 @@ public class SalesController {
         salesService.delete(id);
     }
 
+    @PutMapping("/cancel/{id}")
+    public void cancelSale(@PathVariable Long id) {
+        salesService.cancel(id);
+    }
+
     @GetMapping("/client-debts/{clientId}")
     public List<ClientDebtDTO> getClientDebts(@PathVariable Long clientId) {
         return salesService.getClientDebts(clientId);

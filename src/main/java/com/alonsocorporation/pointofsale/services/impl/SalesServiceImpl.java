@@ -185,6 +185,28 @@ public class SalesServiceImpl implements SalesService {
     }
 
     @Override
+    public void cancel(Long id) {
+        Optional<Sales> saleOptional = salesRepository.findById(id);
+        if (saleOptional.isPresent()) {
+            Sales sale = saleOptional.get();
+
+            sale.setState("cancelada");
+
+            // Devolver el stock de los productos asociados a la venta
+            for (SaleProduct saleProduct : sale.getSaleProducts()) {
+                Products product = saleProduct.getProduct();
+                product.setStock(product.getStock() + saleProduct.getQuantity());
+                productsRepository.save(product);
+            }
+
+            // Guardar la venta con el estado actualizado
+            salesRepository.save(sale);
+        } else {
+            throw new ProductNotFoundException(id);
+        }
+    }
+
+    @Override
     public List<SalesDTO> getSalesByState(String state) {
         return salesRepository.findByState(state)
                 .stream()
@@ -249,7 +271,12 @@ public class SalesServiceImpl implements SalesService {
         LocalDateTime startOfDay = LocalDateTime.of(year, month, day, 0, 0, 0);
         LocalDateTime endOfDay = LocalDateTime.of(year, month, day, 23, 59, 59);
 
-        List<Sales> dailySales = salesRepository.findByCreatedAtBetween(startOfDay, endOfDay);
+        // Obtener ventas del día y excluir las canceladas
+        List<Sales> dailySales = salesRepository.findByCreatedAtBetween(startOfDay, endOfDay)
+                .stream()
+                .filter(sale -> !"cancelada".equalsIgnoreCase(sale.getState()))
+                .collect(Collectors.toList());
+
         // Calcular ingresos totales
         Double totalIncome = dailySales.stream()
                 .mapToDouble(sale -> {
@@ -289,7 +316,6 @@ public class SalesServiceImpl implements SalesService {
                 .limit(5)
                 .map(SalesDTO::new)
                 .collect(Collectors.toList());
-
         return new DailyIncomeDTO(totalIncome, numberOfTransactions, averageTicket, incomeByHour, lastFiveTransactions);
     }
 
@@ -299,7 +325,12 @@ public class SalesServiceImpl implements SalesService {
         LocalDateTime endOfMonth = LocalDateTime.of(year, month, startOfMonth.toLocalDate().lengthOfMonth(), 23, 59,
                 59);
 
-        List<Sales> monthlySales = salesRepository.findByCreatedAtBetween(startOfMonth, endOfMonth);
+        // Obtener ventas del mes y excluir las canceladas
+        List<Sales> monthlySales = salesRepository.findByCreatedAtBetween(startOfMonth, endOfMonth)
+                .stream()
+                .filter(sale -> !"cancelada".equalsIgnoreCase(sale.getState()))
+                .collect(Collectors.toList());
+
         // Calcular ingresos totales
         Double totalIncome = monthlySales.stream()
                 .mapToDouble(sale -> {
@@ -349,7 +380,12 @@ public class SalesServiceImpl implements SalesService {
         LocalDateTime startOfYear = LocalDateTime.of(year, 1, 1, 0, 0, 0);
         LocalDateTime endOfYear = LocalDateTime.of(year, 12, 31, 23, 59, 59);
 
-        List<Sales> yearlySales = salesRepository.findByCreatedAtBetween(startOfYear, endOfYear);
+        // Obtener ventas del año y excluir las canceladas
+        List<Sales> yearlySales = salesRepository.findByCreatedAtBetween(startOfYear, endOfYear)
+                .stream()
+                .filter(sale -> !"cancelada".equalsIgnoreCase(sale.getState()))
+                .collect(Collectors.toList());
+
         // Calcular ingresos totales
         Double totalIncome = yearlySales.stream()
                 .mapToDouble(sale -> {

@@ -14,6 +14,7 @@ public interface SalesService {
     SalesDTO create(Sales sales);
     SalesDTO update(Long id, Sales sales);
     void delete(Long id);
+    void cancel(Long id);
     List<SalesDTO> getSalesByState(String state);
     List<ClientDebtDTO> getClientDebts(Long clientId);
     DailyIncomeDTO getDailyIncome(int year, int month, int day);
