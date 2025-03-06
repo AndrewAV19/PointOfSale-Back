@@ -2,6 +2,7 @@ package com.alonsocorporation.pointofsale.security.filter;
 
 import com.alonsocorporation.pointofsale.dto.request.LoginRequestDTO;
 import com.alonsocorporation.pointofsale.entities.User;
+import com.alonsocorporation.pointofsale.services.LicenciaService;
 import com.alonsocorporation.pointofsale.services.UserService;
 import static com.alonsocorporation.pointofsale.security.TokenJwtConfig.*;
 import java.io.IOException;
@@ -30,15 +31,29 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
     private AuthenticationManager authenticationManager;
 
     private final UserService userService;
+    private final LicenciaService licenciaService;
 
-    public JwtAuthenticationFilter(AuthenticationManager authenticationManager, UserService userService) {
+    public JwtAuthenticationFilter(AuthenticationManager authenticationManager, UserService userService, LicenciaService licenciaService ) {
         this.authenticationManager = authenticationManager;
         this.userService = userService;
+        this.licenciaService = licenciaService;
     }
 
     @Override
     public Authentication attemptAuthentication(HttpServletRequest request, HttpServletResponse response)
             throws AuthenticationException {
+
+        if (!licenciaService.verificarActivacion()) {
+            try {
+                response.getWriter()
+                        .write(new ObjectMapper().writeValueAsString(Map.of("error", "Licencia no activada")));
+                response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                return null;
+            } catch (IOException e) {
+                throw new RuntimeException("Error al escribir respuesta de error", e);
+            }
+        }
+
         LoginRequestDTO login = null;
         String email = "";
         String password = "";
@@ -64,7 +79,7 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
                 .getPrincipal();
         String username = userDetails.getUsername();
 
-        User usuario = userService.findByEmail(username); 
+        User usuario = userService.findByEmail(username);
 
         Collection<? extends GrantedAuthority> roles = authResult.getAuthorities();
 

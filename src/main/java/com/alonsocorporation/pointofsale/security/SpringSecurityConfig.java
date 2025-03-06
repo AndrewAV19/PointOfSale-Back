@@ -2,6 +2,7 @@ package com.alonsocorporation.pointofsale.security;
 
 import com.alonsocorporation.pointofsale.security.filter.JwtAuthenticationFilter;
 import com.alonsocorporation.pointofsale.security.filter.JwtValidationFilter;
+import com.alonsocorporation.pointofsale.services.LicenciaService;
 import com.alonsocorporation.pointofsale.services.UserService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -18,14 +19,15 @@ import org.springframework.security.web.SecurityFilterChain;
 public class SpringSecurityConfig {
 
     private final AuthenticationConfiguration authenticationConfiguration;
-
+    private final LicenciaService licenciaService;
     private final UserService userService;
 
     public SpringSecurityConfig(
             AuthenticationConfiguration authenticationConfiguration,
-            UserService userService) {
+            UserService userService, LicenciaService licenciaService) {
         this.authenticationConfiguration = authenticationConfiguration;
         this.userService = userService;
+        this.licenciaService = licenciaService;
     }
 
     @Bean
@@ -36,10 +38,10 @@ public class SpringSecurityConfig {
     @Bean
     SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         return http.authorizeHttpRequests(authz -> authz
-                //.requestMatchers(HttpMethod.POST, "/users").hasRole("ADMIN")
                 .requestMatchers(HttpMethod.POST, "/login").permitAll()
+                .requestMatchers( "/licencia/**").permitAll()
                 .anyRequest().authenticated())
-                .addFilter(new JwtAuthenticationFilter(authenticationManager(), userService))
+                .addFilter(new JwtAuthenticationFilter(authenticationManager(), userService,licenciaService))
                 .addFilter(new JwtValidationFilter(authenticationManager()))
                 .csrf(config -> config.disable())
                 .cors(cors -> cors.configure(http))
