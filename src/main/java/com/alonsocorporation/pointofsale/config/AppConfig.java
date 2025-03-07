@@ -35,6 +35,9 @@ public class AppConfig {
                 DataPointOfSale defaultData = new DataPointOfSale();
                 defaultData.setId(1L);
                 defaultData.setName("Mi Tiendita");
+                defaultData.setAddress("Dirección ejemplo");
+                defaultData.setPhone("12345");
+                defaultData.setPrintTicket(true);
                 dataPointOfSaleRepository.save(defaultData);
                 System.out.println("Registro inicial 'Mi Tiendita' creado exitosamente");
             }

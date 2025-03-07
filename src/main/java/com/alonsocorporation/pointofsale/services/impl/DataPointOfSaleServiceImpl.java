@@ -5,6 +5,8 @@ import com.alonsocorporation.pointofsale.exceptions.ClientNotFoundException;
 import com.alonsocorporation.pointofsale.repositories.DataPointOfSaleRepository;
 import com.alonsocorporation.pointofsale.services.DataPointOfSaleService;
 import java.util.List;
+import java.util.Optional;
+
 import org.springframework.stereotype.Service;
 
 @Service
@@ -28,15 +30,35 @@ public class DataPointOfSaleServiceImpl implements DataPointOfSaleService {
     }
 
     @Override
-    public DataPointOfSale update(Long id, DataPointOfSale dataPointOfSale) {
-        if (id != 1) {
-            throw new IllegalArgumentException("Solo se puede actualizar el registro con ID 1");
+public DataPointOfSale update(Long id, DataPointOfSale dataPointOfSaleDetails) {
+    if (id != 1) {
+        throw new IllegalArgumentException("Solo se puede actualizar el registro con ID 1");
+    }
+
+    Optional<DataPointOfSale> dataOptional = dataPointOfSaleRepository.findById(id);
+    if (dataOptional.isPresent()) {
+        DataPointOfSale existingData = dataOptional.get();
+
+        // Actualizar solo los campos que no son null
+        if (dataPointOfSaleDetails.getName() != null) {
+            existingData.setName(dataPointOfSaleDetails.getName());
+        }
+        if (dataPointOfSaleDetails.getAddress() != null) {
+            existingData.setAddress(dataPointOfSaleDetails.getAddress());
+        }
+        if (dataPointOfSaleDetails.getPhone() != null) {
+            existingData.setPhone(dataPointOfSaleDetails.getPhone());
         }
 
-        DataPointOfSale existingData = dataPointOfSaleRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Registro no encontrado"));
+        // Si el valor de printTicket no es null, actualiza el campo
+        if (dataPointOfSaleDetails.getPrintTicket() != null) {
+            existingData.setPrintTicket(dataPointOfSaleDetails.getPrintTicket());
+        }
 
-        existingData.setName(dataPointOfSale.getName());
         return dataPointOfSaleRepository.save(existingData);
+    } else {
+        throw new RuntimeException("Registro no encontrado con id " + id);
     }
+}
+
 }

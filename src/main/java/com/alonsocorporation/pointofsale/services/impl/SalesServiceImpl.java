@@ -11,6 +11,8 @@ import com.alonsocorporation.pointofsale.entities.*;
 import com.alonsocorporation.pointofsale.exceptions.ProductNotFoundException;
 import com.alonsocorporation.pointofsale.repositories.*;
 import com.alonsocorporation.pointofsale.services.SalesService;
+import com.alonsocorporation.pointofsale.services.TicketService;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -33,15 +35,17 @@ public class SalesServiceImpl implements SalesService {
     private final ClientsRepository clientsRepository;
     private final UserRepository userRepository;
     private final SaleProductRepository saleProductRepository;
+    private final TicketService ticketService;
 
     public SalesServiceImpl(SalesRepository salesRepository, ProductsRepository productsRepository,
             ClientsRepository clientsRepository, UserRepository userRepository,
-            SaleProductRepository saleProductRepository) {
+            SaleProductRepository saleProductRepository, TicketService ticketService) {
         this.salesRepository = salesRepository;
         this.productsRepository = productsRepository;
         this.clientsRepository = clientsRepository;
         this.userRepository = userRepository;
         this.saleProductRepository = saleProductRepository;
+        this.ticketService = ticketService;
     }
 
     @Override
@@ -101,7 +105,12 @@ public class SalesServiceImpl implements SalesService {
 
         // Guarda la venta y los productos asociados
         Sales savedSale = salesRepository.save(sale);
-        return new SalesDTO(savedSale);
+        SalesDTO salesDTO = new SalesDTO(savedSale);
+
+        // Imprimir el ticket
+        ticketService.printTicket(salesDTO);
+
+        return salesDTO;
     }
 
     @Override

@@ -13,4 +13,18 @@ public class DataPointOfSale {
     private Long id;
 
     private String name;
+    private String address;
+    private String phone;
+    private Boolean printTicket;
+
+    public Boolean getPrintTicket() {
+        return printTicket;
+    }
+
+    public Boolean setPrintTicket() {
+        return printTicket;
+    }
+
+   
+
 }
