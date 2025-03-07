@@ -29,7 +29,7 @@ public class Products {
     private Integer stock;
 
     @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "category_id", nullable = false)
+    @JoinColumn(name = "category_id", nullable = true)
     private Categories category;
 
     @ManyToMany(fetch = FetchType.EAGER, cascade = CascadeType.REMOVE)
