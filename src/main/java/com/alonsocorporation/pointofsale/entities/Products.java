@@ -4,7 +4,7 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.Data;
 import java.time.LocalDateTime;
-import java.util.List;
+import java.util.*;
 
 @Entity
 @Data
@@ -15,8 +15,11 @@ public class Products {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
     private Long id;
-    
+
     private String barCode;
+
+    @Lob
+    private String qrCode;
 
     @NotBlank
     private String name;
@@ -55,6 +58,9 @@ public class Products {
 
     @PrePersist
     protected void onCreate() {
+        if (this.barCode == null || this.barCode.isEmpty()) {
+            this.barCode = UUID.randomUUID().toString().replace("-", "").substring(0, 12);
+        }
         this.createdAt = LocalDateTime.now();
         this.updatedAt = LocalDateTime.now();
     }

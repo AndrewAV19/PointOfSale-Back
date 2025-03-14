@@ -12,4 +12,5 @@ public interface ProductsService {
     ProductDTO create(Products products);
     ProductDTO update(Long id, Products products);
     void delete(Long id);
+    ProductDTO generateQrCode(Long id);
 }

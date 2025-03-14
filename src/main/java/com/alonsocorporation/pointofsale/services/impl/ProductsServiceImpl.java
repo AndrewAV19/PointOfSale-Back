@@ -8,6 +8,7 @@ import com.alonsocorporation.pointofsale.exceptions.ProductNotFoundException;
 import com.alonsocorporation.pointofsale.repositories.ProductsRepository;
 import com.alonsocorporation.pointofsale.repositories.SuppliersRepository;
 import com.alonsocorporation.pointofsale.services.ProductsService;
+import com.alonsocorporation.pointofsale.services.QRCodeGeneratorService;
 
 import org.springframework.stereotype.Service;
 
@@ -29,12 +30,14 @@ public class ProductsServiceImpl implements ProductsService {
     private final ProductsRepository productsRepository;
     private final SuppliersRepository suppliersRepository;
     private final CategoriesRepository categoriesRepository;
+    private final QRCodeGeneratorService qrCodeGeneratorService;
 
     public ProductsServiceImpl(ProductsRepository productsRepository, SuppliersRepository suppliersRepository,
-            CategoriesRepository categoriesRepository) {
+            CategoriesRepository categoriesRepository, QRCodeGeneratorService qrCodeGeneratorService) {
         this.productsRepository = productsRepository;
         this.suppliersRepository = suppliersRepository;
         this.categoriesRepository = categoriesRepository;
+        this.qrCodeGeneratorService = qrCodeGeneratorService;
     }
 
     @Override
@@ -63,9 +66,13 @@ public class ProductsServiceImpl implements ProductsService {
             product.setImage("");
         }
 
-        if (product.getBarCode() == null) {
-            product.setBarCode("");
+        if (product.getBarCode() == null || product.getBarCode().isEmpty()) {
+            throw new RuntimeException("El código de barras es obligatorio para generar el QR");
         }
+
+        // Generar código QR
+        String qrCodeBase64 = qrCodeGeneratorService.generateQRCode(product.getBarCode(), 200, 200);
+        product.setQrCode(qrCodeBase64);
 
         // Si no se proporcionan proveedores, inicializa una lista vacía
         if (product.getSuppliers() == null) {
@@ -161,4 +168,20 @@ public class ProductsServiceImpl implements ProductsService {
             throw new ProductNotFoundException(id);
         }
     }
+
+    @Override
+    public ProductDTO generateQrCode(Long id) {
+        Products product = productsRepository.findById(id)
+                .orElseThrow(() -> new ProductNotFoundException(id));
+
+        // Generar nuevo código QR
+        String qrCodeBase64 = qrCodeGeneratorService.generateQRCode(product.getBarCode(), 200, 200);
+        product.setQrCode(qrCodeBase64);
+
+        // Guardar cambios en la base de datos
+        productsRepository.save(product);
+
+        return new ProductDTO(product);
+    }
+
 }

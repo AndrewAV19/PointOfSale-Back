@@ -10,6 +10,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 public class ProductDTO {
     private Long id;
     private String barCode;
+    private String qrCode;
     private String name;
     private String description;
     private Double price;
@@ -24,6 +25,7 @@ public class ProductDTO {
     public ProductDTO(Products product) {
         this.id = product.getId();
         this.barCode = product.getBarCode();
+        this.qrCode = product.getQrCode();
         this.name = product.getName();
         this.description = product.getDescription();
         this.price = product.getPrice();
