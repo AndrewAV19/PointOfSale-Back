@@ -70,6 +70,8 @@ public class SalesServiceImpl implements SalesService {
             sale.setSaleProducts(new ArrayList<>());
         }
 
+        double totalSale = 0.0;
+
         for (SaleProduct saleProduct : sale.getSaleProducts()) {
             Products product = productsRepository.findById(saleProduct.getProduct().getId())
                     .orElseThrow(() -> new RuntimeException(
@@ -79,6 +81,19 @@ public class SalesServiceImpl implements SalesService {
                 throw new RuntimeException("Not enough stock for product " + product.getName());
             }
 
+            // Asignar el descuento del producto al SaleProduct
+            saleProduct.setDiscount(product.getDiscount());
+
+            // Aplicar descuento al precio del producto
+            double productPrice = product.getPrice();
+            double discount = saleProduct.getDiscount() != null ? saleProduct.getDiscount() : 0.0;
+            double discountedPrice = productPrice * (1 - discount / 100);
+
+            // Calcular el subtotal con el descuento aplicado
+            double subtotal = discountedPrice * saleProduct.getQuantity();
+            totalSale += subtotal;
+
+            // Actualizar el stock del producto
             product.setStock(product.getStock() - saleProduct.getQuantity());
             productsRepository.save(product);
 
@@ -86,6 +101,9 @@ public class SalesServiceImpl implements SalesService {
             saleProduct.setSale(sale);
             saleProduct.setProduct(product);
         }
+
+        // Establecer el total de la venta
+        sale.setTotal(totalSale);
 
         if (sale.getClient() != null && sale.getClient().getId() != 0) {
             Clients client = clientsRepository.findById(sale.getClient().getId())

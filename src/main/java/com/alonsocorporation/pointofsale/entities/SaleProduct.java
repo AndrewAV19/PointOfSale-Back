@@ -21,4 +21,6 @@ public class SaleProduct {
     private Products product;
 
     private Integer quantity;
+
+    private Double discount;
 }

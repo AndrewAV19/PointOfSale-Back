@@ -9,10 +9,12 @@ public class SaleProductDTO {
     private Long id;
     private ProductsDTO product;
     private Integer quantity;
+    private Double discount;
 
     public SaleProductDTO(SaleProduct saleProduct) {
         this.id = saleProduct.getId();
         this.product = new ProductsDTO(saleProduct.getProduct());
         this.quantity = saleProduct.getQuantity();
+        this.discount = saleProduct.getDiscount();
     }
 }
