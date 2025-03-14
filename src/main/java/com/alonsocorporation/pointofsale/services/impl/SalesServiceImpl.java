@@ -149,7 +149,8 @@ public class SalesServiceImpl implements SalesService {
             // Limpiar productos anteriores
             sale.getSaleProducts().clear();
 
-            // Agregar nuevos productos y RESTAR stock
+            double totalSale = 0.0; 
+
             if (salesDetails.getSaleProducts() != null) {
                 for (SaleProduct saleProduct : salesDetails.getSaleProducts()) {
                     Products product = productsRepository.findById(saleProduct.getProduct().getId())
@@ -160,6 +161,19 @@ public class SalesServiceImpl implements SalesService {
                         throw new RuntimeException("Not enough stock for product " + product.getName());
                     }
 
+                    // Asignar el descuento del producto al SaleProduct
+                    saleProduct.setDiscount(product.getDiscount());
+
+                    // Aplicar descuento al precio del producto
+                    double productPrice = product.getPrice();
+                    double discount = saleProduct.getDiscount() != null ? saleProduct.getDiscount() : 0.0;
+                    double discountedPrice = productPrice * (1 - discount / 100);
+
+                    // Calcular el subtotal con el descuento aplicado
+                    double subtotal = discountedPrice * saleProduct.getQuantity();
+                    totalSale += subtotal;
+
+                    // Actualizar el stock del producto
                     product.setStock(product.getStock() - saleProduct.getQuantity());
                     productsRepository.save(product);
 
@@ -167,6 +181,8 @@ public class SalesServiceImpl implements SalesService {
                     sale.getSaleProducts().add(saleProduct);
                 }
             }
+
+            sale.setTotal(totalSale);
 
             if (salesDetails.getClient() != null) {
                 sale.setClient(salesDetails.getClient());
@@ -182,11 +198,10 @@ public class SalesServiceImpl implements SalesService {
             if (salesDetails.getState() != null) {
                 sale.setState(salesDetails.getState());
             }
-            if (salesDetails.getTotal() != null && salesDetails.getTotal() >= 0) {
-                sale.setTotal(salesDetails.getTotal());
-            }
 
-            return new SalesDTO(salesRepository.save(sale));
+            // Guardar la venta actualizada
+            Sales updatedSale = salesRepository.save(sale);
+            return new SalesDTO(updatedSale);
         } else {
             throw new RuntimeException("Sale not found with id " + id);
         }
